@@ -1,0 +1,35 @@
+# Environnements
+.env
+.env.local
+.env.production
+/backend/env
+
+
+# Dépendances
+node_modules/
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build
+/backend/public/hot
+/backend/public/storage
+/backend/storage/*.key
+/frontend/dist
+/frontend/build
+
+# Cache
+/backend/bootstrap/cache/*
+
+
+

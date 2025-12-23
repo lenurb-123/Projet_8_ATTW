@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Category;
+use Illuminate\Support\Collection;
 
 class DashboardController extends Controller
 {
-
     public function index()
     {
         $stats = [
@@ -46,18 +46,47 @@ class DashboardController extends Controller
         return view('admin.statistics', compact('stats'));
     }
 
-    private function getRegistrationsByMonth()
+    private function getRegistrationsByMonth(): array
     {
-        return User::selectRaw('
-                DATE_FORMAT(created_at, "%Y-%m") as month,
-                COUNT(*) as count
-            ')
-            ->where('created_at', '>=', now()->subMonths(12))
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->mapWithKeys(function ($item) {
-                return [$item->month => $item->count];
-            });
+        $months = [];
+
+        for ($i = 11; $i >= 0; $i--) {
+            $monthDate = now()->subMonths($i);
+            $monthKey = $monthDate->format('Y-m');
+            $monthLabel = $monthDate->translatedFormat('F Y');
+
+            $months[$monthKey] = [
+                'label' => $monthLabel,
+                'count' => 0
+            ];
+        }
+
+        $startDate = now()->subMonths(12);
+
+        $users = User::where('created_at', '>=', $startDate)->get();
+
+        $usersByMonth = $users->groupBy(function ($user) {
+            return $user->created_at->format('Y-m');
+        });
+
+        foreach ($usersByMonth as $monthKey => $monthUsers) {
+            if (isset($months[$monthKey])) {
+                $months[$monthKey]['count'] = $monthUsers->count();
+            }
+        }
+
+        $labels = [];
+        $data = [];
+
+        foreach ($months as $month) {
+            $labels[] = $month['label'];
+            $data[] = $month['count'];
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data,
+            'total' => $users->count()
+        ];
     }
 }

@@ -6,25 +6,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens; [span_11](start_span)// Pour l'API Token[span_11](end_span)
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory, Notifiable;
 
     /**
-     * Les attributs assignables en masse.
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role',
-        'is_active',
     ];
 
     /**
-     * Les attributs cachés pour la sérialisation (API).
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
      */
     protected $hidden = [
         'password',
@@ -32,20 +34,15 @@ class User extends Authenticatable
     ];
 
     /**
-     * Les conversions de types automatiques.
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        [span_12](start_span)'password' => 'hashed',
-        'is_active' => 'boolean',
-    ];
-
-    /**
-     * Permet de vérifier si l'utilisateur est un administrateur.
-     * Utile pour les Policies et Middleware.
-     */
-    public function isAdmin(): bool
+    protected function casts(): array
     {
-        return $this->role === 'admin';
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 }

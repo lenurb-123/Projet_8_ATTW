@@ -8,6 +8,12 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::get('/', function () {
-    return view('welcome');
+Route::view('/', 'index');
+
+Route::get('/test', function () {
+    return view('welcome'); //
+});
+
+Route::get('/api-docs', function () {
+    return view('api-documentation');
 });

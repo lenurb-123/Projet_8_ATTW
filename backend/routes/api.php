@@ -10,54 +10,9 @@ use App\Http\Controllers\API\DirectoryController;
 
 
 
-Route::get('/te', function () {
-    return response()->json(['message' => 'API OK']);
-});
-
 
 // Public routes
-// Au lieu de :
-
-// Utilisez directement :
-Route::post('/register', function(\Illuminate\Http\Request $request) {
-    // Validation manuelle
-    $validated = $request->validate([
-        'first_name' => ['required', 'string', 'max:100'],
-        'last_name' => ['required', 'string', 'max:100'],
-        'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-        'password' => ['required', 'confirmed'],
-        'birth_date' => ['required', 'date', 'before:today'],
-        'gender' => ['required', 'in:male,female,other'],
-        'phone' => ['required', 'string', 'max:20'],
-        'address' => ['required', 'string', 'max:255'],
-        'city' => ['required', 'string', 'max:100'],
-        'country' => ['required', 'string', 'max:100'],
-        'newsletter_subscribed' => ['boolean'],
-    ]);
-    
-    // Création de l'utilisateur
-    $user = \App\Models\User::create([
-        'first_name' => $validated['first_name'],
-        'last_name' => $validated['last_name'],
-        'email' => $validated['email'],
-        'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
-        'birth_date' => $validated['birth_date'],
-        'gender' => $validated['gender'],
-        'phone' => $validated['phone'],
-        'address' => $validated['address'],
-        'city' => $validated['city'],
-        'country' => $validated['country'],
-        'newsletter_subscribed' => $validated['newsletter_subscribed'] ?? false,
-    ]);
-    
-    $token = $user->createToken('auth_token')->plainTextToken;
-    
-    return response()->json([
-        'message' => 'Inscription réussie',
-        'user' => $user,
-        'token' => $token
-    ], 201);
-});
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password-reset', [AuthController::class, 'resetPassword']);
 Route::get('/email/verify/{token}', [AuthController::class, 'verifyEmail'])->name('email.verify');
@@ -121,5 +76,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user-news', [NewsController::class, 'userNews']);
 });
 
-// Routes admin (à séparer, gérées par l'autre groupe)
+// Routes admin 
 // Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () { ... });

@@ -2,22 +2,42 @@
 
 namespace App\Models;
 
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'role',
-        'is_active',
+        'status',
+        'birth_date',
+        'gender',
+        'phone',
+        'address',
+        'city',
+        'country',
+        'newsletter_subscribed'
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -25,22 +45,62 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'is_active' => 'boolean',
+        'birth_date' => 'date',
+        'newsletter_subscribed' => 'boolean',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+
+    /* Vérifie si l'utilisateur est un administrateur.
+     */
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
-    public function profile()
+    /**
+     * Vérifie si l'utilisateur est un acteur économique.
+     */
+    public function isEconomicActor(): bool
     {
-        return $this->hasOne(UserProfile::class);
+        return $this->role === 'user';
+    }   
+
+
+    public function professionalProfile()
+    {
+        return $this->hasOne(ProfessionalProfile::class);
     }
 
-    public function category()
+    public function academicEducations()
     {
-        return $this->belongsTo(Category::class);
+        return $this->hasMany(AcademicEducation::class);
     }
+
+    public function professionalExperiences()
+    {
+        return $this->hasMany(ProfessionalExperience::class);
+    }
+
+    public function announcements()
+    {
+        return $this->hasMany(Announcement::class, 'published_by');
+    }
+
+    public function newsArticles()
+    {
+        return $this->hasMany(NewsArticle::class, 'author_id');
+    }
+    /**
+     * Vérifie si le profil est en attente.
+     */
+    public function isProfilePending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
 }

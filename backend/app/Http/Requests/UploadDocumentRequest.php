@@ -6,23 +6,24 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UploadDocumentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'document_type' => ['required', 'in:profile_photo,cv,legal_document'],
+            'file' => ['required', 'file'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'document_type.in' => 'Le type de document doit être: profile_photo, cv ou legal_document.',
+            'file.required' => 'Veuillez sélectionner un fichier.',
         ];
     }
 }

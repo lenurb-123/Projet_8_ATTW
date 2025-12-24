@@ -9,7 +9,7 @@ class RegisterUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Tout le monde peut s'inscrire
+        return true;
     }
 
     public function rules(): array

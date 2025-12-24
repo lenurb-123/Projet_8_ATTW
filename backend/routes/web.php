@@ -11,7 +11,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::view('/', 'index');
 
 Route::get('/test', function () {
-    return view('welcome'); //
+    return view('welcome');
 });
 
 Route::get('/api-docs', function () {

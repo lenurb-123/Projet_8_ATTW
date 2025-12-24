@@ -1,0 +1,177 @@
+### ============================================
+### 📋 API TESTS - Projet AATW Backend
+### ============================================
+
+### 1. 🔐 CONFIGURATION DES VARIABLES D'ENVIRONNEMENT
+@baseUrl = http://localhost:8000
+@apiUrl = {{baseUrl}}/api
+@token = {{login.response.body.token}}
+
+### ============================================
+### 🟢 A. ROUTES PUBLIQUES (sans authentification)
+### ============================================
+
+### 🔐 AUTHENTIFICATION
+
+### POST /api/register - Inscription
+POST {{apiUrl}}/register
+Content-Type: application/json
+Accept: application/json
+
+{
+    "first_name": "Nouveau",
+    "last_name": "Utilisateur",
+    "email": "nouveau@test.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "phone": "+33612345678"
+}
+
+### POST /api/login - Connexion et génération du token
+# @name login
+POST {{apiUrl}}/login
+Content-Type: application/json
+Accept: application/json
+
+{
+    "email": "admin@test.com",
+    "password": "password123"
+}
+
+### POST /api/password-reset - Demande réinitialisation
+POST {{apiUrl}}/password-reset
+Content-Type: application/json
+
+{
+    "email": "admin@test.com"
+}
+
+### GET /api/email/verify/{token} - Vérification email
+GET {{apiUrl}}/email/verify/votre_token_ici
+Accept: application/json
+
+
+### 📂 ANNUAIRE
+
+### GET /api/directory - Liste des profils publics
+GET {{apiUrl}}/directory
+Accept: application/json
+
+### GET /api/directory/search - Recherche avancée
+GET {{apiUrl}}/directory/search?query=admin&city=Admin%20City
+Accept: application/json
+
+### GET /api/directory/{id} - Détails d'un profil
+GET {{apiUrl}}/directory/1
+Accept: application/json
+
+
+### 📢 ANNONCES
+
+### GET /api/announcements - Liste des annonces
+GET {{apiUrl}}/announcements
+Accept: application/json
+
+### GET /api/announcements/{id} - Détails d'une annonce
+GET {{apiUrl}}/announcements/1
+Accept: application/json
+
+
+### 📰 ACTUALITÉS
+
+### GET /api/news - Liste des actualités
+GET {{apiUrl}}/news
+Accept: application/json
+
+### GET /api/news/{slug} - Lecture d'une actualité
+GET {{apiUrl}}/news/premiere-actualite
+Accept: application/json
+
+
+### ============================================
+### 🔴 B. ROUTES PROTÉGÉES (Token Bearer requis)
+### Header requis : Authorization: Bearer {{token}}
+### ============================================
+
+### 🔐 AUTHENTIFICATION PROTÉGÉE
+
+### POST /api/logout - Déconnexion
+POST {{apiUrl}}/logout
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### GET /api/user - Récupérer l'utilisateur connecté
+GET {{apiUrl}}/user
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### 👤 PROFIL UTILISATEUR
+
+### GET /api/profile - Afficher le profil
+GET {{apiUrl}}/profile
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### PUT /api/profile - Mettre à jour le profil
+PUT {{apiUrl}}/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+    "first_name": "Admin",
+    "last_name": "Updated",
+    "phone": "+33123456789",
+    "address": "456 Updated Street"
+}
+
+### DELETE /api/profile - Supprimer le compte
+DELETE {{apiUrl}}/profile
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### 🎓 FORMATIONS ACADÉMIQUES
+
+### POST /api/profile/education - Ajouter une formation
+POST {{apiUrl}}/profile/education
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+    "institution": "Université de Test",
+    "degree": "Master",
+    "field_of_study": "Informatique",
+    "start_date": "2020-09-01",
+    "end_date": "2022-06-30",
+    "description": "Formation en développement web"
+}
+
+### GET /api/profile/education - Liste des formations
+GET {{apiUrl}}/profile/education
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### 💼 EXPÉRIENCES PROFESSIONNELLES
+
+### POST /api/profile/experience - Ajouter une expérience
+POST {{apiUrl}}/profile/experience
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+    "company": "Entreprise Test",
+    "position": "Développeur Backend",
+    "start_date": "2022-07-01",
+    "end_date": null,
+    "description": "Développement d'APIs Laravel"
+}
+
+### GET /api/profile/experience - Liste des expériences
+GET {{apiUrl}}/profile/experience
+Authorization: Bearer {{token}}
+Accept: application/json

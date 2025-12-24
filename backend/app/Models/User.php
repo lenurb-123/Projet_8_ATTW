@@ -6,11 +6,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable , HasApiTokens;
+
+    const ROLE_ADMIN = 'admin';
+    const ROLE_USER = 'user';
+
+    const STATUS_PENDING = 'pending';
+    const STATUS_ACTIVE = 'active';
+    const STATUS_INACTIVE = 'inactive';
+    const STATUS_SUSPENDED = 'suspended';
 
     /**
      * The attributes that are mass assignable.
@@ -30,7 +38,7 @@ class User extends Authenticatable
         'address',
         'city',
         'country',
-        'newsletter_subscribed'
+        'newsletter_subscribed',
     ];
 
     /**
@@ -49,17 +57,11 @@ class User extends Authenticatable
         'newsletter_subscribed' => 'boolean',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-
     /* Vérifie si l'utilisateur est un administrateur.
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'admin' && $this->isActive();
     }
 
     /**
@@ -67,9 +69,87 @@ class User extends Authenticatable
      */
     public function isEconomicActor(): bool
     {
-        return $this->role === 'user';
-    }   
+        return $this->role === 'user' && $this->isActive();
+    }
 
+    /**
+     * Vérifie si l'utilisateur est actif.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    /**
+     * Vérifie si le profil est en attente.
+     */
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isProfilePending(): bool
+    {
+        return $this->isPending();
+    }
+
+    /**
+     * Vérifie si le compte est suspendu.
+     */
+    public function isSuspended(): bool
+    {
+        return $this->status === self::STATUS_SUSPENDED;
+    }
+
+    /**
+     * Vérifie si le compte est inactif.
+     */
+    public function isInactive(): bool
+    {
+        return $this->status === self::STATUS_INACTIVE;
+    }
+
+    /**
+     * Activer l'utilisateur.
+     */
+    public function activate(): void
+    {
+        $this->update([
+            'status' => self::STATUS_ACTIVE,
+        ]);
+    }
+
+    /**
+     * Désactiver l'utilisateur.
+     */
+    public function deactivate(): void
+    {
+        $this->update([
+            'status' => self::STATUS_INACTIVE,
+        ]);
+    }
+
+    /**
+     * Mettre en attente l'utilisateur.
+     */
+    public function setPending(): void
+    {
+        $this->update([
+            'status' => self::STATUS_PENDING,
+        ]);
+    }
+
+    /**
+     * Suspendre l'utilisateur.
+     */
+    public function suspend(): void
+    {
+        $this->update([
+            'status' => self::STATUS_SUSPENDED,
+        ]);
+    }
+
+    // Les relations
 
     public function professionalProfile()
     {
@@ -95,12 +175,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(NewsArticle::class, 'author_id');
     }
-    /**
-     * Vérifie si le profil est en attente.
-     */
-    public function isProfilePending(): bool
-    {
-        return $this->status === 'pending';
-    }
 
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

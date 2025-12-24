@@ -1,0 +1,9 @@
+### Login - Admin
+GET http://localhost:8000/api/directory
+Content-Type: application/json
+Accept: application/json
+
+{
+    "email": "admin@test.com",
+    "password": "password123"
+}

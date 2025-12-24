@@ -68,44 +68,47 @@
     <div class="container">
         <h1>🚀 API Plateforme Communautaire</h1>
         <div class="subtitle">Backend pour la gestion des acteurs économiques locaux</div>
-        
+
         <div style="margin: 2rem 0;">
             <p>Bienvenue sur l'API backend du projet de plateforme communautaire.</p>
             <p>Cette API permet de gérer les profils des acteurs économiques de la commune.</p>
         </div>
-        
+
         <div class="endpoints">
             <h3>📡 Endpoints Principaux</h3>
-            
+
             <div class="endpoint">
                 <span class="method post">POST</span>
                 <strong>/api/register</strong> - Inscription d'un nouvel utilisateur
             </div>
-            
+
             <div class="endpoint">
                 <span class="method post">POST</span>
                 <strong>/api/login</strong> - Connexion
             </div>
-            
+
             <div class="endpoint">
                 <span class="method get">GET</span>
                 <strong>/api/directory</strong> - Annuaire public des profils
             </div>
-            
+
             <div class="endpoint">
                 <span class="method get">GET</span>
                 <strong>/api/announcements</strong> - Annonces de la mairie
             </div>
-            
+
             <div class="endpoint">
                 <span class="method get">GET</span>
                 <strong>/api/news</strong> - Actualités économiques
             </div>
         </div>
-        
+
         <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.8;">
             <p>Pour utiliser l'API, utilisez des outils comme Postman, Insomnia ou cURL</p>
         </div>
     </div>
+
+    <a class="nav-link" style="color:white; font-weight:bold;" href="{{ route('admin.dashboard') }}">Dashboard</a>
+
 </body>
 </html>

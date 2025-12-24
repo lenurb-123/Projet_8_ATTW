@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('announcements', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->string('slug')->unique();
+            $table->text('content');
+            $table->enum('target_type', ['all', 'category', 'sector', 'specific'])->default('all');
+            $table->json('target_ids')->nullable(); // IDs des catégories/secteurs ciblés
+            $table->boolean('is_published')->default(false);
+            $table->timestamp('published_at')->nullable();
+            $table->foreignId('published_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

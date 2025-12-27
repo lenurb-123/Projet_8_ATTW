@@ -30,12 +30,9 @@ const profileService = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type); // 'photo', 'cv', 'document'
-    
-    const response = await api.post('/profiles/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+
+    // Axios automatically sets the correct Content-Type with boundary for FormData
+    const response = await api.post('/profiles/upload', formData);
     return response.data;
   },
 

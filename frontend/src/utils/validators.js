@@ -37,16 +37,28 @@ export const registerSchema = yup.object({
 });
 
 export const profileSchema = yup.object({
-  firstName: yup.string().required('Le prénom est requis'),
-  lastName: yup.string().required('Le nom est requis'),
-  dateOfBirth: yup.date().required('La date de naissance est requise'),
+  first_name: yup.string().required('Le prénom est requis'),
+  last_name: yup.string().required('Le nom est requis'),
+  birth_date: yup.date().required('La date de naissance est requise'),
   gender: yup.string().required('Le genre est requis'),
   phone: yup.string().required('Le téléphone est requis'),
   address: yup.string().required('L\'adresse est requise'),
+  city: yup.string().required('La ville est requise'),
+  country: yup.string().required('Le pays est requis'),
   category: yup.string().required('La catégorie est requise'),
   sector: yup.string().required('Le secteur d\'activité est requis'),
-  educationLevel: yup.string().required('Le niveau d\'étude est requis'),
+  education_level: yup.string().required('Le niveau d\'étude est requis'),
   bio: yup.string().max(1000, 'La biographie ne peut dépasser 1000 caractères'),
+  skills: yup.string().nullable(),
+  experiences: yup.array().of(
+    yup.object().shape({
+      title: yup.string().required('Le titre est requis'),
+      company: yup.string().required('L\'entreprise est requise'),
+      start_date: yup.string().required('La date de début est requise'),
+      end_date: yup.string().nullable(),
+      description: yup.string()
+    })
+  ).nullable()
 });
 
 export const forgotPasswordSchema = yup.object({

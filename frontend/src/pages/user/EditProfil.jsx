@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import profileService from '../../services/profileService';
+import { profileService } from '../../services/allServices';
 import Loader from '../../components/common/Loader';
 import Alert from '../../components/common/Alert';
 import { CATEGORIES, EDUCATION_LEVELS } from '../../constants/categories';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiUser, FiBriefcase, FiFileText, FiCamera, FiPlus, FiTrash2, FiCalendar, FiMapPin, FiPhone, FiMail, FiEye, FiDownload, FiEdit2 } from 'react-icons/fi';
+import { FiUser, FiBriefcase, FiFileText, FiCamera, FiPlus, FiTrash2, FiMapPin, FiPhone, FiEye } from 'react-icons/fi';
 
 const TabButton = ({ active, onClick, children, icon }) => (
   <button

@@ -38,15 +38,15 @@ export const CATEGORIES = [
 
 export const PROFILE_STATUS = {
   PENDING: 'pending',
-  VALIDATED: 'validated',
-  REJECTED: 'rejected',
+  ACTIVE: 'active',
+  SUSPENDED: 'suspended',
   MODIFICATION_REQUESTED: 'modification_requested',
 };
 
 export const PROFILE_STATUS_LABELS = {
   pending: 'En attente de validation',
-  validated: 'Validé',
-  rejected: 'Rejeté',
+  active: 'active',
+  suspended: 'suspended',
   modification_requested: 'Modification demandée',
 };
 

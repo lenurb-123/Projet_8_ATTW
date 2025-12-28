@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import profileService from '../../services/profileService';
+import { profileService } from '../../services/allServices';
 import Loader from '../../components/common/Loader';
 import Alert from '../../components/common/Alert';
 import { PROFILE_STATUS_LABELS } from '../../constants/categories';
@@ -41,19 +41,20 @@ const UsagerDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           
           {/* Carte Statut */}
+
           <div className="bg-[#0a1f33ce] p-6 rounded-card shadow-card hover:bg-[#0a1f3382]">
             <h3 className="text-sm font-inter font-text-medium text-[#FFFF] mb-2">Statut du profil</h3>
             <div className="flex items-center">
               <span
                 className={`px-3 py-1 rounded-full text-sm font-inter font-text-medium ${
-                  profile?.status === 'validated'
+                  profile?.user?.status === 'active'
                     ? 'bg-cream border-2 border-orange text-navy'
-                    : profile?.status === 'rejected'
+                    : profile?.user?.status === 'suspended'
                     ? 'bg-cream border-2 border-red-500 text-navy'
                     : 'bg-cream border-2 border-orange-dark text-navy'
                 }`}
               >
-                {PROFILE_STATUS_LABELS[profile?.status] || 'Non défini'}
+                {PROFILE_STATUS_LABELS[profile?.user?.status] || 'Non défini'}
               </span>
             </div>
             <Link
@@ -65,28 +66,28 @@ const UsagerDashboard = () => {
 
           {/* Carte Profil */}
           <div className="bg-[#0a1f33ae] p-6 rounded-card shadow-card">
-            <h3 className="text-sm font-inter font-text-medium text-[#FFFF] mb-2">Complétude du profil</h3>
+            <h3 className="text-sm font-inter font-text-medium text-[#FFFF] mb-2">Biographie</h3>
             <div className="flex items-center">
-              <div className="text-3xl font-poppins font-title-bold text-orange">
-                {profile?.completeness || 0}%
+              <div className="text-xl font-poppins font-title-bold text-orange">
+                {profile?.professional_profile?.biography || 'N/A'}
               </div>
             </div>
-            <div className="mt-2 w-full bg-cream rounded-full h-2">
-              <div
-                className="bg-orange h-2 rounded-full"
-                style={{ width: `${profile?.completeness || 0}%` }}
-              ></div>
-            </div>
+            {/*<div className="mt-2 w-full bg-cream rounded-full h-2">*/}
+            {/*  <div*/}
+            {/*    className="bg-orange h-2 rounded-full"*/}
+            {/*    style={{ width: `${profile?.professional_experiences?.length || 0}%` }}*/}
+            {/*  ></div>*/}
+            {/*</div>*/}
           </div>
 
           {/* Carte Visites */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Vues du profil</h3>
-            <div className="text-3xl font-bold text-blue-600">
-              {profile?.views || 0}
-            </div>
-            <p className="text-sm text-gray-500 mt-2">Ce mois-ci</p>
-          </div>
+          {/*<div className="bg-white p-6 rounded-lg shadow-md">*/}
+          {/*  <h3 className="text-sm font-medium text-gray-500 mb-2">Vues du profil</h3>*/}
+          {/*  <div className="text-3xl font-bold text-blue-600">*/}
+          {/*    {profile?.professional_experiences?.length || 'N/A'}*/}
+          {/*  </div>*/}
+          {/*  <p className="text-sm text-gray-500 mt-2">Ce mois-ci</p>*/}
+          {/*</div>*/}
         </div>
 
         {/* Actions rapides */}
@@ -128,38 +129,40 @@ const UsagerDashboard = () => {
               <h2 className="text-xl font-poppins font-title-bold text-navy">Aperçu du profil</h2>
               <Link
                 to="/usager/profil/edit"
-                className="text-[black] hover:text-orange-dark text-sm font-inter font-text-medium text-[100%]">
+                className="p-2 border-2 border-gray-warm rounded-card hover:border-orange hover:bg-[#f9fafb99] transition text-[black] hover:text-orange-dark text-sm font-inter font-text-medium text-[100%]">
                 Modifier
               </Link>
             </div>
 
             <div className="flex items-start">
-              <div className="w-20 h-20 bg-orange rounded-full flex items-center justify-center text-navy text-2xl font-poppins font-title-bold flex-shrink-0">
-                {profile.firstName?.[0]}{profile.lastName?.[0]}
-              </div>
               <div className="ml-6 flex-1">
                 <h3 className="text-2xl font-poppins font-title-bold text-navy">
-                  {profile.firstName} {profile.lastName}
+                  {profile?.user?.first_name} {profile?.user?.last_name}
                 </h3>
-                <p className="text-gray-800 mt-1">{profile.category}</p>
-                <p className="text-gray-800">{profile.sector}</p>
+                <p className="text-gray-900 mt-1">{profile?.user?.profession}</p>
+                <p className="text-gray-900">{profile?.user?.secteur?.toUpperCase()}</p>
 
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-700 mb-2 border-b-2 border-b-[#00000041] w-1/2">Email</p>
-                    <p className="text-gray-900">{profile.email}</p>
+                    <p className="text-gray-900">{profile?.user?.email}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-700 mb-2 border-b-2 border-b-[#00000041] w-1/2">Téléphone</p>
-                    <p className="text-gray-900">{profile.phone || 'Non renseigné'}</p>
+                    <p className="text-gray-900">{profile?.user?.phone || 'Non renseigné'}</p>
                   </div>
                 </div>
-
-                {profile.bio && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-700 mb-2 border-b-2 border-b-[#00000041] w-1/4">Biographie</p>
-                    <p className="text-gray-900">{profile.bio}</p>
-                  </div>
+                {profile.professional_experiences && (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-700 mb-2 border-b-2 border-b-[#00000041] w-1/4">Nombre de domaines d'expériences</p>
+                      <p className="text-gray-900">{profile.professional_experiences.length}</p>
+                    </div>
+                )}
+                {profile.academic_educations && (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-700 mb-2 border-b-2 border-b-[#00000041] w-1/4">Nombre d'antécédents académiques</p>
+                      <p className="text-gray-900">{profile.academic_educations.length}</p>
+                    </div>
                 )}
               </div>
             </div>

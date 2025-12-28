@@ -6,10 +6,12 @@ import ProtectedRoute from '../components/common/ProtectedRoute';
 import Home from '../pages/public/Home';
 import Annuaire from '../pages/public/Annuaire';
 import ProfilPublic from '../pages/public/ProfilPublic';
+import About from '../pages/public/About';
 
 // Pages d'authentification
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
+import ForgotPassword from '../pages/auth/ForgotPassword';
 
 // Pages usager
 import UsagerDashboard from '../pages/user/UsagerDashboard';
@@ -32,6 +34,19 @@ const router = createBrowserRouter([
       { path: '/annuaire/:id', element: <ProfilPublic /> },
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },
+      { path: '/about', element: <About /> },
+
+      /* Route pour la réinitilisation de mot de passe 
+       * (protégée + admin et usager uniquement)
+      */
+      {
+        path: '/forgot-password',
+        element: (
+          <ProtectedRoute >
+            <ForgotPassword />
+          </ProtectedRoute>
+        ),
+      },
 
       // Routes usager (protégées)
       {

@@ -5,7 +5,7 @@ import './App.css';
 
 function App() {
   const location = useLocation();
-  const hideNavAndFooter = ['/login', '/register'].includes(location.pathname);
+  const hideNavAndFooter = ['/login', '/register', '/forgot-password'].includes(location.pathname);
 
   return (
     <div className="flex flex-col min-h-screen">

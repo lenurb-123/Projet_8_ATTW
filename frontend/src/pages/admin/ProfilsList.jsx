@@ -9,7 +9,7 @@ const ProfilsList = () => {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('pending'); // pending, all, validated, rejected
+  const [filter, setFilter] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -19,16 +19,11 @@ const ProfilsList = () => {
   const fetchProfiles = async () => {
     try {
       setLoading(true);
-      const params = {
+      const data = await adminService.getUsers({
         status: filter !== 'all' ? filter : undefined,
         search: searchTerm,
-      };
-      
-      const data = filter === 'pending' 
-        ? await adminService.getPendingProfiles(params)
-        : await adminService.getAllProfiles(params);
-      
-      setProfiles(data.data || []);
+      });
+      setProfiles(data.data || data);
     } catch (err) {
       setError('Erreur lors du chargement des profils');
     } finally {
@@ -38,11 +33,10 @@ const ProfilsList = () => {
 
   const handleQuickValidate = async (id) => {
     try {
-      await adminService.validateProfile(id);
-      setProfiles(profiles.filter(p => p.id !== id));
-      Alert({ type: 'success', message: 'Profil validé avec succès' });
+      await adminService.approveProfile(id);
+      fetchProfiles();
     } catch (err) {
-      setError('Erreur lors de la validation');
+      alert("Erreur lors de la validation");
     }
   };
 

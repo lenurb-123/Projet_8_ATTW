@@ -32,12 +32,9 @@ class User extends Authenticatable
         'password',
         'role',
         'status',
-        'birth_date',
-        'gender',
         'phone',
-        'address',
-        'city',
-        'country',
+        'profession',
+        'secteur',
         'newsletter_subscribed',
     ];
 
@@ -53,7 +50,6 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'birth_date' => 'date',
         'newsletter_subscribed' => 'boolean',
     ];
 
@@ -158,7 +154,7 @@ class User extends Authenticatable
 
     public function academicEducations()
     {
-        return $this->hasMany(AcademicEducation::class);
+        return $this->hasMany(AcademicEducation::class , 'user_id');
     }
 
     public function professionalExperiences()

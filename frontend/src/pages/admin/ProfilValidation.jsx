@@ -24,11 +24,33 @@ const ProfilValidation = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      // Pour l'instant, on utilise getPublicProfile, à adapter selon votre API
-      const data = await adminService.getAllProfiles({ id });
-      setProfile(data);
+      const data = await adminService.getProfileForValidation(id);
+
+      // FORMATTING / MAPPING DIRECT
+      const formattedProfile = {
+        id: data.id,
+
+        firstName: data.user?.first_name,
+        lastName: data.user?.last_name,
+        email: data.user?.email,
+        phone: data.user?.phone,
+        profession: data.user?.profession,
+        sector: data.sector?.name || data.user?.secteur,
+
+        createdAt: data.created_at,
+        status: data.approved_at ? 'validated' : (data.rejection_reason ? 'rejected' : 'pending'),
+        rejectionReason: data.rejection_reason,
+
+        educations: data.user?.academic_educations || [],
+        experiences: data.user?.professional_experiences || [],
+
+        cvUrl: data.cv_url,
+        photoUrl: data.photo_url
+      };
+
+      setProfile(formattedProfile);
     } catch (err) {
-      setError('Erreur lors du chargement du profil');
+      setError('Profil introuvable ou erreur serveur');
     } finally {
       setLoading(false);
     }
@@ -69,12 +91,16 @@ const ProfilValidation = () => {
     }
 
     try {
-      await adminService.requestModification(id, modificationComments);
-      setSuccess('Demande de modification envoyée');
+      setLoading(true);
+      await adminService.rejectProfile(id, modificationComments);
+
+      setSuccess('Demande de modification envoyée (Profil rejeté pour correction)');
       setShowModificationModal(false);
       setTimeout(() => navigate('/admin/profils'), 2000);
     } catch (err) {
       setError('Erreur lors de la demande');
+    }finally {
+      setLoading(false);
     }
   };
 

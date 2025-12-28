@@ -19,12 +19,9 @@ return new class extends Migration
             $table->string('password');
             $table->enum('role', ['user', 'admin'])->default('user');
             $table->enum('status', ['pending', 'approved', 'rejected', 'suspended'])->default('pending');
-            $table->date('birth_date')->nullable();
-            $table->enum('gender', ['male', 'female', 'other'])->nullable();
             $table->string('phone')->nullable();
-            $table->string('address')->nullable();
-            $table->string('city')->nullable();
-            $table->string('country')->nullable();
+            $table->string('profession')->nullable();
+            $table->string('secteur')->nullable();
             $table->boolean('newsletter_subscribed')->default(false);
             $table->rememberToken();
             $table->timestamps();

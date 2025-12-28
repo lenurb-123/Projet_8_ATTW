@@ -22,12 +22,9 @@ class UpdateUserRequest extends FormRequest
             'role' => ['sometimes', 'in:user,admin'],
             'status' => ['sometimes', 'in:pending,active,inactive,suspended'],
             'category_id' => ['nullable', 'exists:categories,id'],
-            'birth_date' => ['nullable', 'date', 'before:today'],
-            'gender' => ['nullable', 'in:male,female,other'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:100'],
-            'country' => ['nullable', 'string', 'max:100'],
+            'profession' => ['required', 'string', 'max:100'],
+            'secteur' => ['required', 'string', 'max:100'],
             'newsletter_subscribed' => ['boolean'],
         ];
     }

@@ -21,12 +21,12 @@ return new class extends Migration
             $table->string('current_position')->nullable();
             $table->string('company_name')->nullable();
             $table->enum('education_level', ['bac', 'bac_2', 'bac_3', 'bac_5', 'doctorate'])->nullable();
-            $table->json('skills')->nullable(); // Array de compétences
-            $table->json('languages')->nullable(); // Array de langues
+            $table->json('skills')->nullable();
+            $table->json('languages')->nullable();
             $table->json('professional_interests')->nullable();
             $table->string('profile_photo_url')->nullable();
             $table->string('cv_url')->nullable();
-            $table->json('legal_documents')->nullable(); // URLs des documents légaux
+            $table->json('legal_documents')->nullable();
             $table->boolean('is_public')->default(true);
             $table->timestamp('approved_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users');

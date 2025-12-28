@@ -25,14 +25,10 @@ class RegisterUserRequest extends FormRequest
                     ->letters()
                     ->mixedCase()
                     ->numbers()
-                    ->symbols()
             ],
-            'birth_date' => ['required', 'date', 'before:today'],
-            'gender' => ['required', 'in:male,female,other'],
             'phone' => ['required', 'string', 'max:20'],
-            'address' => ['required', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:100'],
-            'country' => ['required', 'string', 'max:100'],
+            'profession' => ['required', 'string', 'max:100'],
+            'secteur' => ['required', 'string', 'max:100'],
             'newsletter_subscribed' => ['boolean'],
         ];
     }

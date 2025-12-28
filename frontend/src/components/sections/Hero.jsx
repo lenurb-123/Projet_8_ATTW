@@ -82,7 +82,7 @@ const Hero = () => {
               repeat: Infinity, 
               ease: "easeInOut",
               times: [0, 0.2, 0.3, 0.5, 0.6],
-              delay: 0.3 
+              delay: 0.3
             }}
           >
             <div className="text-3xl md:text-4xl font-poppins font-title-bold" style={{ color: '#E8902C' }}>

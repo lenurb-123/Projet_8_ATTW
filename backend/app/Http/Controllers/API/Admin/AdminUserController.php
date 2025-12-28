@@ -74,11 +74,8 @@ class AdminUserController extends Controller
             'status' => $validated['status'],
             'category_id' => $validated['category_id'] ?? null,
             'phone' => $validated['phone'] ?? null,
-            'address' => $validated['address'] ?? null,
-            'city' => $validated['city'] ?? null,
-            'country' => $validated['country'] ?? null,
-            'birth_date' => $validated['birth_date'] ?? null,
-            'gender' => $validated['gender'] ?? null,
+            'profession' => $validated['profession'] ?? null,
+            'secteur' => $validated['secteur'] ?? null,
             'newsletter_subscribed' => $validated['newsletter_subscribed'] ?? false,
         ]);
 

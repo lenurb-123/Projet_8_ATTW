@@ -1,6 +1,7 @@
 import { useState } from 'react'; 
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
+import {authService} from "../../services/allServices.js";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -38,42 +39,31 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      // On prépare les données au format attendu par Laravel 🛰️
+      const dataToSubmit = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        password_confirmation: formData.confirmPassword,
+        profession: formData.profession,
+        secteur: formData.secteur,
+      };
 
-      const data = await response.json();
+      await authService.register(dataToSubmit);
 
-      if (!response.ok) {
-        throw new Error(data.message || "Une erreur est survenue.");
-      }
-
-      setMessage("Inscription réussie !");
       setMessageType("success");
-      localStorage.setItem('userEmail', formData.email);
+      setMessage("Inscription réussie !");
 
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        phone: "",
-        profession: "",
-        secteur: "",
-      });
-
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-
-    } catch (error) {
-      setMessage(error.message);
+      setTimeout(() => navigate("/login"), 2000);
+    } catch (err) {
       setMessageType("error");
+      const backendMessage = err.response?.data?.errors
+          ? Object.values(err.response.data.errors).flat()[0]
+          : err.response?.data?.message;
+
+      setMessage(backendMessage || "Erreur lors de l'inscription");
     }
   };
 

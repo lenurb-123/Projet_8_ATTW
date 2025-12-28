@@ -19,13 +19,11 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => User::ROLE_USER,
-            'status' => User::STATUS_PENDING,
-            'birth_date' => $request->birth_date,
-            'gender' => $request->gender,
+//             'status' => User::STATUS_PENDING,
+            'status' => User::STATUS_ACTIVE,
             'phone' => $request->phone,
-            'address' => $request->address,
-            'city' => $request->city,
-            'country' => $request->country,
+            'profession' => $request->profession,
+            'secteur' => $request->secteur,
             'newsletter_subscribed' => $request->newsletter_subscribed ?? false,
         ]);
 

@@ -18,9 +18,40 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       const data = await adminService.getStatistics();
-      setStats(data);
+
+      const mappedStats = {
+        totalProfiles: (data.profiles_by_validation?.approved || 0) +
+            (data.profiles_by_validation?.pending || 0) +
+            (data.profiles_by_validation?.rejected || 0),
+        newProfilesThisMonth: data.registration_trend?.[data.registration_trend.length - 1]?.count || 0,
+        pendingProfiles: data.profiles_by_validation?.pending || 0,
+        validatedProfiles: data.profiles_by_validation?.approved || 0,
+        rejectedProfiles: data.profiles_by_validation?.rejected || 0,
+
+        categoryDistribution: data.users_by_category?.map(cat => ({
+          name: cat.name,
+          value: cat.users_count
+        })) || [],
+
+        registrationTrend: data.registration_trend?.map(item => ({
+          month: item.label,
+          count: item.count
+        })) || [],
+
+        recentProfiles: data.recent_users?.map(user => ({
+          id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          email: user.email,
+          status: user.status,
+          createdAt: user.created_at,
+          category: user.category?.name
+        })) || []
+      };
+
+      setStats(mappedStats);
+
     } catch (err) {
-      setError('Erreur lors du chargement des statistiques');
+      setError('Impossible de charger les statistiques admin');
     } finally {
       setLoading(false);
     }
@@ -121,7 +152,7 @@ const AdminDashboard = () => {
             </Link>
 
             <button
-              onClick={() => adminService.exportData('excel', {})}
+              onClick={() => adminService.exportUsers('excel', {})}
               className="flex items-center p-4 border border-gray-warm rounded-card bg-[#fefefe91] text-navy hover:bg-[#faf7f2c9] transition text-left"
             >
               <div className="w-12 h-12 bg-[#f4ae5ee7] rounded-card flex items-center justify-center text-navy text-xl">
@@ -155,10 +186,8 @@ const AdminDashboard = () => {
             <span id='spanCut' className=" p-1 px-2 m-auto mb-5 rounded-full border border-black cursor-pointer rotate-180"
              onClick={
               () => {
-                // params
-                var spanCut = document.getElementById('spanCut');
-                var visualz = document.getElementById('graphics');
-                // Operations
+                let spanCut = document.getElementById('spanCut');
+                let visualz = document.getElementById('graphics');
                 spanCut.style.transition = 'all 0.8s ease-in-out';
                 spanCut.style.backgroundColor == '' ? spanCut.style.backgroundColor='rgba(0,0,0,30%)' : spanCut.style.backgroundColor='';
                 spanCut.style.rotate == '180deg' ? spanCut.style.rotate = '0deg' : spanCut.style.rotate = '180deg';
@@ -166,7 +195,6 @@ const AdminDashboard = () => {
               }
             }> ▼ </span>
           </div>
-          { /** */ }
           <div id='graphics' className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
             {/* Répartition par catégorie */}
@@ -249,11 +277,11 @@ const AdminDashboard = () => {
                   <tr key={profile.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-inter font-text-medium text-white">
-                        {profile.firstName} {profile.lastName}
+                        {profile.name}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-inter font-text">
-                      {profile.category}
+                      {profile.category || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

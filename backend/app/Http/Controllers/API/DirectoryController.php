@@ -12,93 +12,126 @@ class DirectoryController extends Controller
     /**
      * Lister tous les profils validés (annuaire public).
      */
-    public function index(Request $request)
-    {
-        $query = User::where('status', 'approved')
-                     ->whereHas('professionalProfile', function($q) {
-                         $q->where('is_public', true);
-                     })
-                     ->with(['professionalProfile.category', 'professionalProfile.sector']);
 
-        // Recherche par mot-clé
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhereHas('professionalProfile', function($q2) use ($search) {
-                      $q2->where('skills', 'like', "%{$search}%")
-                         ->orWhere('current_position', 'like', "%{$search}%")
-                         ->orWhere('company_name', 'like', "%{$search}%")
-                         ->orWhere('biography', 'like', "%{$search}%");
-                  });
-            });
-        }
+     public function index(Request $request)
+     {
+         try {
+             // 1. On récupère les users sans charger les relations complexes pour l'instant
+             $query = User::where('status', 'active');
 
-        // Filtres avancés
-        if ($request->has('category_id')) {
-            $query->whereHas('professionalProfile', function($q) use ($request) {
-                $q->where('category_id', $request->category_id);
-            });
-        }
+             // On ne garde que le strict nécessaire pour tester l'affichage
+             $profiles = $query->paginate($request->get('per_page', 20));
 
-        if ($request->has('sector_id')) {
-            $query->whereHas('professionalProfile', function($q) use ($request) {
-                $q->where('sector_id', $request->sector_id);
-            });
-        }
+             $profiles->getCollection()->transform(function($user) {
+                 // On charge manuellement le profil pour éviter les bugs de with()
+                 $profile = $user->professionalProfile;
 
-        if ($request->has('education_level')) {
-            $query->whereHas('professionalProfile', function($q) use ($request) {
-                $q->where('education_level', $request->education_level);
-            });
-        }
+                 return [
+                     'id' => $user->id,
+                     'full_name' => $user->first_name . ' ' . $user->last_name,
+                     'category' => 'Test',
+                     'sector' => 'Test',
+                     'current_position' => $profile?->current_position ?? 'N/A',
+                     'years_experience' => $profile?->years_experience ?? 0,
+                     'city' => $user->city ?? 'Bénin',
+                 ];
+             });
 
-        if ($request->has('city')) {
-            $query->where('city', 'like', "%{$request->city}%");
-        }
+             return response()->json(['profiles' => $profiles]);
 
-        if ($request->has('min_experience')) {
-            $query->whereHas('professionalProfile', function($q) use ($request) {
-                $q->where('years_experience', '>=', $request->min_experience);
-            });
-        }
+         } catch (\Exception $e) {
+             // SI CA CRASH, on verra l'erreur exacte dans la réponse JSON !
+             return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+         }
+     }
 
-        // Tri des résultats
-        $sortBy = $request->get('sort_by', 'relevance');
-        switch ($sortBy) {
-            case 'name':
-                $query->orderBy('last_name')->orderBy('first_name');
-                break;
-            case 'experience':
-                $query->orderByDesc(
-                    ProfessionalProfile::select('years_experience')
-                        ->whereColumn('professional_profiles.user_id', 'users.id')
-                        ->limit(1)
-                );
-                break;
-            case 'newest':
-                $query->orderByDesc('created_at');
-                break;
-            default: // relevance
-                // Tri par défaut (pourrait être basé sur la correspondance de recherche)
-                $query->orderByDesc('created_at');
-        }
-
-        // Pagination
-        $perPage = $request->get('per_page', 20);
-        $profiles = $query->paginate($perPage);
-
-        // Formater la réponse
-        $profiles->getCollection()->transform(function($user) {
-            return $this->formatDirectoryProfile($user);
-        });
-
-        return response()->json([
-            'profiles' => $profiles,
-            'filters' => $request->only(['search', 'category_id', 'sector_id', 'education_level', 'city', 'min_experience']),
-        ]);
-    }
+//     public function index(Request $request)
+//     {
+//         $query = User::where('status', 'active')
+//                      ->whereHas('professionalProfile', function($q) {
+//                          $q->where('is_public', true);
+//                      })
+//                      ->with(['professionalProfile.category', 'professionalProfile.sector']);
+//
+//         // Recherche par mot-clé
+//         if ($request->has('search')) {
+//             $search = $request->search;
+//             $query->where(function($q) use ($search) {
+//                 $q->where('first_name', 'like', "%{$search}%")
+//                   ->orWhere('last_name', 'like', "%{$search}%")
+//                   ->orWhereHas('professionalProfile', function($q2) use ($search) {
+//                       $q2->where('skills', 'like', "%{$search}%")
+//                          ->orWhere('current_position', 'like', "%{$search}%")
+//                          ->orWhere('company_name', 'like', "%{$search}%")
+//                          ->orWhere('biography', 'like', "%{$search}%");
+//                   });
+//             });
+//         }
+//
+//         // Filtres avancés
+//         if ($request->has('category_id')) {
+//             $query->whereHas('professionalProfile', function($q) use ($request) {
+//                 $q->where('category_id', $request->category_id);
+//             });
+//         }
+//
+//         if ($request->has('sector_id')) {
+//             $query->whereHas('professionalProfile', function($q) use ($request) {
+//                 $q->where('sector_id', $request->sector_id);
+//             });
+//         }
+//
+//         if ($request->has('education_level')) {
+//             $query->whereHas('professionalProfile', function($q) use ($request) {
+//                 $q->where('education_level', $request->education_level);
+//             });
+//         }
+//
+//         if ($request->has('city')) {
+//             $query->where('city', 'like', "%{$request->city}%");
+//         }
+//
+//         if ($request->has('min_experience')) {
+//             $query->whereHas('professionalProfile', function($q) use ($request) {
+//                 $q->where('years_experience', '>=', $request->min_experience);
+//             });
+//         }
+//
+//         // Tri des résultats
+//         $sortBy = $request->get('sort_by', 'relevance');
+//         switch ($sortBy) {
+//             case 'name':
+//                 $query->orderBy('last_name')->orderBy('first_name');
+//                 break;
+//             case 'experience':
+//                 $query->orderByDesc(
+//                     ProfessionalProfile::select('years_experience')
+//                         ->whereColumn('professional_profiles.user_id', 'users.id')
+//                         ->limit(1)
+//                 );
+//                 break;
+//             case 'newest':
+//                 $query->orderByDesc('created_at');
+//                 break;
+//             default: // relevance
+//                 // Tri par défaut (pourrait être basé sur la correspondance de recherche)
+//                 $query->orderByDesc('created_at');
+//         }
+//
+//         // Pagination
+//         $perPage = $request->get('per_page', 20);
+//         $profiles = $query->paginate($perPage);
+//
+//         // Formater la réponse
+//         $profiles->getCollection()->transform(function($user) {
+//             return $this->formatDirectoryProfile($user);
+//         });
+//
+//         return response()->json([
+//             'profiles' => $profiles,
+//             'filters' => $request->only(['search', 'category_id', 'sector_id', 'education_level', 'city', 'min_experience']),
+//         ]);
+//     }
 
     /**
      * Recherche avancée.
@@ -139,6 +172,7 @@ class DirectoryController extends Controller
     /**
      * Formater un profil pour l'annuaire.
      */
+
     private function formatDirectoryProfile($user)
     {
         $profile = $user->professionalProfile;
@@ -157,6 +191,7 @@ class DirectoryController extends Controller
             'summary' => $profile->biography ? substr($profile->biography, 0, 150) . '...' : null,
         ];
     }
+
 
     /**
      * Formater un profil détaillé.

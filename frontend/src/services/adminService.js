@@ -1,45 +1,33 @@
 import api from './api';
 
 const adminService = {
-  // Gestion des profils
-  getPendingProfiles: async (params) => {
-    const response = await api.get('/admin/profiles/pending', { params });
+  getDashboard: async () => {
+    const response = await api.get('/admin/dashboard');
     return response.data;
   },
 
-  getAllProfiles: async (params) => {
-    const response = await api.get('/admin/profiles', { params });
+  getStatistics: async () => {
+    const response = await api.get('/admin/statistics');
     return response.data;
   },
 
-  validateProfile: async (id) => {
-    const response = await api.post(`/admin/profiles/${id}/validate`);
-    return response.data;
-  },
-
-  rejectProfile: async (id, reason) => {
-    const response = await api.post(`/admin/profiles/${id}/reject`, { reason });
-    return response.data;
-  },
-
-  requestModification: async (id, comments) => {
-    const response = await api.post(`/admin/profiles/${id}/request-modification`, { comments });
-    return response.data;
-  },
-
-  // Gestion des utilisateurs
-  getUsers: async (params) => {
+  getUsers: async (params = {}) => {
     const response = await api.get('/admin/users', { params });
+    return response.data.users;
+  },
+
+  createUser: async (userData) => {
+    const response = await api.post('/admin/users', userData);
     return response.data;
   },
 
-  activateUser: async (id) => {
-    const response = await api.post(`/admin/users/${id}/activate`);
+  getUser: async (id) => {
+    const response = await api.get(`/admin/users/${id}`);
     return response.data;
   },
 
-  suspendUser: async (id, reason) => {
-    const response = await api.post(`/admin/users/${id}/suspend`, { reason });
+  updateUser: async (id, userData) => {
+    const response = await api.put(`/admin/users/${id}`, userData);
     return response.data;
   },
 
@@ -48,21 +36,55 @@ const adminService = {
     return response.data;
   },
 
-  // Statistiques
-  getStatistics: async () => {
-    const response = await api.get('/admin/statistics');
+  activateUser: async (id) => {
+    const response = await api.post(`/admin/users/${id}/activate`);
     return response.data;
   },
 
-  // Exports
-  exportData: async (format, filters) => {
-    const response = await api.post('/admin/export', { format, filters }, {
-      responseType: 'blob',
-    });
+  deactivateUser: async (id) => {
+    const response = await api.post(`/admin/users/${id}/deactivate`);
     return response.data;
   },
 
-  // Catégories
+  suspendUser: async (id, reason = '') => {
+    const response = await api.post(`/admin/users/${id}/suspend`, { reason });
+    return response.data;
+  },
+
+  setUserPending: async (id) => {
+    const response = await api.post(`/admin/users/${id}/pending`);
+    return response.data;
+  },
+
+  getPendingProfiles: async (params = {}) => {
+    const response = await api.get('/admin/profile-requests', { params });
+    return response.data;
+  },
+
+  getProfileForValidation: async (id) => {
+    const response = await api.get(`/admin/profile-requests/${id}`);
+    return response.data;
+  },
+
+  validateProfile: async (id) => {
+    const response = await api.post(`/admin/profile-requests/${id}/approve`);
+    return response.data;
+  },
+
+  approveProfile: async (id) => {
+    return adminService.validateProfile(id);
+  },
+
+  rejectProfile: async (id, reason) => {
+    const response = await api.post(`/admin/profile-requests/${id}/reject`, { reason });
+    return response.data;
+  },
+
+  getCategories: async () => {
+    const response = await api.get('/admin/categories');
+    return response.data;
+  },
+
   createCategory: async (data) => {
     const response = await api.post('/admin/categories', data);
     return response.data;
@@ -78,59 +100,17 @@ const adminService = {
     return response.data;
   },
 
-  // Secteurs
-  createSector: async (data) => {
-    const response = await api.post('/admin/sectors', data);
+  createProfessionalCategory: async (data) => {
+    const response = await api.post('/admin/professional-categories', data);
     return response.data;
   },
 
-  updateSector: async (id, data) => {
-    const response = await api.put(`/admin/sectors/${id}`, data);
-    return response.data;
-  },
-
-  deleteSector: async (id) => {
-    const response = await api.delete(`/admin/sectors/${id}`);
-    return response.data;
-  },
-
-  // Actualités
-  createNews: async (data) => {
-    const response = await api.post('/admin/news', data);
-    return response.data;
-  },
-
-  updateNews: async (id, data) => {
-    const response = await api.put(`/admin/news/${id}`, data);
-    return response.data;
-  },
-
-  deleteNews: async (id) => {
-    const response = await api.delete(`/admin/news/${id}`);
-    return response.data;
-  },
-
-  // Annonces
-  createAnnouncement: async (data) => {
-    const response = await api.post('/admin/announcements', data);
-    return response.data;
-  },
-
-  updateAnnouncement: async (id, data) => {
-    const response = await api.put(`/admin/announcements/${id}`, data);
-    return response.data;
-  },
-
-  deleteAnnouncement: async (id) => {
-    const response = await api.delete(`/admin/announcements/${id}`);
-    return response.data;
-  },
-
-  // Newsletter
-  sendNewsletter: async (data) => {
-    const response = await api.post('/admin/newsletter/send', data);
-    return response.data;
-  },
+  exportUsers: async (format = 'excel', filters = {}) => {
+    return await api.post('/admin/export/users',
+        {format, filters},
+        {responseType: 'blob'}
+    );
+  }
 };
 
 export default adminService;

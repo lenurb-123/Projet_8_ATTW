@@ -1,47 +1,42 @@
 import api from './api';
 
 const publicService = {
-  // Rechercher dans l'annuaire
-  searchProfiles: async (params) => {
-    const response = await api.get('/public/profiles', { params });
+  getAllProfiles: async (params = {}) => {
+    const response = await api.get('/directory', { params });
     return response.data;
   },
 
-  // Obtenir un profil public
+  searchProfiles: async (searchTerm, filters = {}) => {
+    const response = await api.get('/directory/search', {
+      params: { q: searchTerm, ...filters }
+    });
+    return response.data;
+  },
+
   getPublicProfile: async (id) => {
-    const response = await api.get(`/public/profiles/${id}`);
+    const response = await api.get(`/directory/${id}`);
     return response.data;
   },
 
-  // Obtenir les catégories
-  getCategories: async () => {
-    const response = await api.get('/public/categories');
+  getNews: async (params = {}) => {
+    const response = await api.get('/news', { params });
     return response.data;
   },
 
-  // Obtenir les secteurs
-  getSectors: async () => {
-    const response = await api.get('/public/sectors');
+  getNewsItem: async (slug) => {
+    const response = await api.get(`/news/${slug}`);
     return response.data;
   },
 
-  // Obtenir les actualités
-  getNews: async (params) => {
-    const response = await api.get('/public/news', { params });
+  getAnnouncements: async (params = {}) => {
+    const response = await api.get('/announcements', { params });
     return response.data;
   },
 
-  // Obtenir une actualité
-  getNewsItem: async (id) => {
-    const response = await api.get(`/public/news/${id}`);
+  getAnnouncement: async (id) => {
+    const response = await api.get(`/announcements/${id}`);
     return response.data;
-  },
-
-  // Obtenir les annonces
-  getAnnouncements: async (params) => {
-    const response = await api.get('/public/announcements', { params });
-    return response.data;
-  },
+  }
 };
 
 export default publicService;

@@ -79,19 +79,11 @@ class ProfessionalProfile extends Model
         return $this->approved_at !== null;
     }
 
-    /**
-     * Récupère les compétences sous forme de tableau.
-     */
-    public function getSkillsArray(): array
-    {
-        return $this->skills ?: [];
+    public function getSkillsArray() {
+        return is_array($this->skills) ? $this->skills : json_decode($this->skills ?? '[]', true);
     }
 
-    /**
-     * Récupère les langues sous forme de tableau.
-     */
-    public function getLanguagesArray(): array
-    {
-        return $this->languages ?: [];
+    public function getLanguagesArray() {
+        return is_array($this->languages) ? $this->languages : json_decode($this->languages ?? '[]', true);
     }
 }

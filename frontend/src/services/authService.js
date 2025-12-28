@@ -1,55 +1,52 @@
 import api from './api';
 
 const authService = {
-  // Inscription
-  register: async (userData) => {
-    const response = await api.post('/auth/register', userData);
-    return response.data;
-  },
-
-  // Connexion
-  login: async (credentials) => {
-    const response = await api.post('/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+  initCSRF: async () => {
+    try {
+      await api.get('/sanctum/csrf-cookie');
+      return true;
+    } catch (error) {
+      return false;
     }
+  },
+
+  register: async (userData) => {
+    await authService.initCSRF();
+    const response = await api.post('/register', userData);
     return response.data;
   },
 
-  // Déconnexion
+  login: async (credentials) => {
+    await authService.initCSRF();
+    const response = await api.post('/login', credentials);
+
+    if (response.data.token) {
+      localStorage.setItem('auth_token', response.data.token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+    }
+
+    return response.data;
+  },
+
+  getCurrentUser: async () => {
+    const token = localStorage.getItem('auth_token');
+    if (token && !api.defaults.headers.common['Authorization']) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await api.get('/user');
+    return response.data;
+  },
+
   logout: async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post('/logout');
     } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+      delete api.defaults.headers.common['Authorization'];
+      window.location.href = '/login';
     }
-  },
-
-  // Vérifier l'email
-  verifyEmail: async (token) => {
-    const response = await api.post('/auth/verify-email', { token });
-    return response.data;
-  },
-
-  // Demander la réinitialisation du mot de passe
-  forgotPassword: async (email) => {
-    const response = await api.post('/auth/forgot-password', { email });
-    return response.data;
-  },
-
-  // Réinitialiser le mot de passe
-  resetPassword: async (data) => {
-    const response = await api.post('/auth/reset-password', data);
-    return response.data;
-  },
-
-  // Obtenir l'utilisateur connecté
-  getCurrentUser: async () => {
-    const response = await api.get('/auth/me');
-    return response.data;
-  },
+  }
 };
 
 export default authService;

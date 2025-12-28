@@ -24,6 +24,8 @@ class AcademicEducation extends Model
         'is_current' => 'boolean',
     ];
 
+    protected $table = 'academic_educations';
+
     /**
      * Relation avec l'utilisateur.
      */
@@ -40,9 +42,14 @@ class AcademicEducation extends Model
         if ($this->is_current) {
             return "{$this->start_year} - Présent";
         }
-        
-        return $this->end_year 
+
+        return $this->end_year
             ? "{$this->start_year} - {$this->end_year}"
             : (string) $this->start_year;
+    }
+
+    public function academicEducations()
+    {
+        return $this->hasMany(AcademicEducation::class);
     }
 }

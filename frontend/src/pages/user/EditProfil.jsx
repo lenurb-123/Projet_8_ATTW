@@ -441,7 +441,7 @@ const EditProfil = () => {
                             value={formData.address || ''}
                             onChange={handleChange}
                             className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:border-orange focus:ring-1 focus:ring-orange transition bg-cream/50"
-                            placeholder="Numéro et nom de rue"
+                            placeholder="Votre adresse complète"
                           />
                         </div>
                       </div>

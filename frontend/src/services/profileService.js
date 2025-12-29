@@ -64,6 +64,20 @@ const profileService = {
   unsubscribeNewsletter: async () => {
     const response = await api.post('/newsletter/unsubscribe');
     return response.data;
+  },
+
+  // Upload de fichiers (photo, CV, documents légaux)
+  uploadFile: async (file, type = 'photo') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    
+    const response = await api.post('/professional/upload-document', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
   }
 };
 

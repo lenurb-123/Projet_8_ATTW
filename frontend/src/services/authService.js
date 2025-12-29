@@ -1,23 +1,13 @@
+// src/services/authService.js
 import api from './api';
 
 const authService = {
-  initCSRF: async () => {
-    try {
-      await api.get('/sanctum/csrf-cookie');
-      return true;
-    } catch (error) {
-      return false;
-    }
-  },
-
   register: async (userData) => {
-    await authService.initCSRF();
     const response = await api.post('/register', userData);
     return response.data;
   },
 
   login: async (credentials) => {
-    await authService.initCSRF();
     const response = await api.post('/login', credentials);
 
     if (response.data.token) {

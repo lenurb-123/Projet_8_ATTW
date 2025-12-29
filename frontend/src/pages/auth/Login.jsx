@@ -24,7 +24,6 @@ const Login = () => {
     }));
   };
 
-  // Dans Login.jsx
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -42,13 +41,12 @@ const Login = () => {
       setMessage("Connexion réussie !");
       setMessageType("success");
 
-      setTimeout(() => {
-        if (user?.role === 'admin') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/usager/dashboard');
-        }
-      }, 1500);
+      // Navigation directe sans setTimeout
+      if (user?.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/usager/dashboard');
+      }
     } catch (err) {
       setMessageType("error");
       setMessage(err.response?.data?.message || "Identifiants invalides");

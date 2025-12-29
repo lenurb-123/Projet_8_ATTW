@@ -39,7 +39,7 @@ class UserProfileController extends Controller
     {
         $user = $request->user();
         
-        // Mettre à jour les champs autorisés
+        // Mettre à jour les champs autorisés (uniquement ceux de la table users)
         $user->update($request->validated());
 
         return response()->json([

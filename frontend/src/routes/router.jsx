@@ -34,7 +34,7 @@ const router = createBrowserRouter([
       { path: '/annuaire/:id', element: <ProfilPublic /> },
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },
-      //{ path: '/about', element: <About /> },
+      { path: '/about', element: <About /> },
 
       /* Route pour la réinitilisation de mot de passe 
        * (protégée + admin et usager uniquement)

@@ -76,32 +76,39 @@ const ProfilPublic = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('about');
 
-  useEffect(() => {
-    fetchProfile();
-  }, [id]);
+ // Remplace les lignes 78-105 par ce code :
 
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+useEffect(() => {
+  fetchProfile();
+}, [id]);
 
-      let data;
-      if (id) {
-        data = await profileService.getProfile(id);
-      } else {
-        // Fallback for testing via /login or explicit My Profile route
-        data = await profileService.getMyProfile();
-      }
+const fetchProfile = async () => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      setProfile(data);
-    } catch (err) {
-      console.warn("Erreur fetch profil, utilisation des données MOCK pour démo:", err);
-      setProfile(MOCK_PROFILE);
-
-    } finally {
-      setLoading(false);
+    let data;
+    if (id) {
+      data = await profileService.getProfile(id);
+    } else {
+      // Fallback pour tester via /login
+      data = await profileService.getMyProfile();
     }
-  };
+
+    setProfile(data);
+  } catch (err) {
+    console.error("Erreur fetch profil:", err);
+    
+    // Gestion propre de l'erreur 404
+    if (err.response?.status === 404) {
+      setError("Ce profil n'existe pas ou n'a pas encore été validé.");
+    } else {
+      setError("Impossible de charger le profil. Veuillez réessayer.");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const getCategoryLabel = (catId) => {
     const cat = CATEGORIES.find(c => c.id === catId);

@@ -11,20 +11,18 @@ const authService = {
     const response = await api.post('/login', credentials);
 
     if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
     }
 
     return response.data;
   },
 
   getCurrentUser: async () => {
-    const token = localStorage.getItem('auth_token');
-    if (token && !api.defaults.headers.common['Authorization']) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
-
     const response = await api.get('/user');
+    if (response.data) {
+      localStorage.setItem('user', JSON.stringify(response.data));
+    }
     return response.data;
   },
 
@@ -32,8 +30,8 @@ const authService = {
     try {
       await api.post('/logout');
     } finally {
-      localStorage.removeItem('auth_token');
-      delete api.defaults.headers.common['Authorization'];
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     }
   }

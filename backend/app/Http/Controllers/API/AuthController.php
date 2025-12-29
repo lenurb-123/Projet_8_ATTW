@@ -13,13 +13,19 @@ class AuthController extends Controller
 {
     public function register(RegisterUserRequest $request)
     {
+        // Déterminer le rôle et le statut
+        // Les utilisateurs sont actifs dès l'inscription pour pouvoir remplir leur profil
+        // Ils passeront en "pending" quand ils soumettront leur profil pour validation
+        $role = $request->role ?? User::ROLE_USER;
+        $status = User::STATUS_ACTIVE; // Tous les utilisateurs commencent "active"
+        
         $user = User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => User::ROLE_USER,
-            'status' => User::STATUS_PENDING,
+            'role' => $role,
+            'status' => $status,
             'phone' => $request->phone,
             'profession' => $request->profession,
             'secteur' => $request->secteur,
@@ -28,8 +34,10 @@ class AuthController extends Controller
 
         $authToken = $user->createToken('auth_token')->plainTextToken;
 
+        $message = 'Inscription réussie. Complétez votre profil pour le soumettre à validation.';
+
         return response()->json([
-            'message' => 'Inscription réussie. Votre compte est en attente de validation.',
+            'message' => $message,
             'user' => $user,
             'token' => $authToken,
         ], 201);

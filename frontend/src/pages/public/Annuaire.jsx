@@ -28,23 +28,27 @@ const Annuaire = () => {
     setLoading(true);
     try {
       const params = {
-        search: searchTerm,
-        category_id: filters.category,
-        sector_id: filters.sector,
-        education_level: filters.education_level,
-        city: filters.city,
+        search: searchTerm || undefined,
+        category_id: filters.category || undefined,
+        sector_id: filters.sector || undefined,
+        education_level: filters.education_level || undefined,
+        city: filters.city || undefined,
         page: currentPage,
         per_page: 12
       };
 
+      // Nettoyer les paramètres undefined
+      Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
+
       const response = await publicService.getAllProfiles(params);
       
-      setProfils(response.profiles.data || []);
-      setTotalPages(response.profiles.last_page || 1);
-      setTotalItems(response.profiles.total || 0);
+      setProfils(response.profiles?.data || []);
+      setTotalPages(response.profiles?.last_page || 1);
+      setTotalItems(response.profiles?.total || 0);
     } catch (error) {
       console.error("Erreur:", error);
       setProfils([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -110,11 +114,13 @@ const Annuaire = () => {
                     className="w-full p-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0A1F33] focus:border-transparent text-sm"
                   >
                     <option value="">Toutes</option>
-                    <option value="cadre-administratif">Cadre Administratif</option>
-                    <option value="cadre-technique">Cadre Technique</option>
-                    <option value="chef-entreprise">Chef d'Entreprise</option>
-                    <option value="artisan">Artisan</option>
-                    <option value="commercant">Commerçant</option>
+                    <option value="1">Cadres administratifs</option>
+                    <option value="2">Cadres techniques</option>
+                    <option value="3">Chefs d'entreprise</option>
+                    <option value="4">Artisans</option>
+                    <option value="5">Commerçants</option>
+                    <option value="6">Jeunes entrepreneurs</option>
+                    <option value="7">Investisseurs</option>
                   </select>
                 </div>
 
@@ -126,11 +132,16 @@ const Annuaire = () => {
                     className="w-full p-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0A1F33] focus:border-transparent text-sm"
                   >
                     <option value="">Tous</option>
-                    <option value="informatique">Informatique</option>
-                    <option value="commerce">Commerce</option>
-                    <option value="sante">Santé</option>
-                    <option value="education">Éducation</option>
-                    <option value="agriculture">Agriculture</option>
+                    <option value="1">Agriculture</option>
+                    <option value="2">Industrie</option>
+                    <option value="3">Services</option>
+                    <option value="4">Commerce</option>
+                    <option value="5">Construction</option>
+                    <option value="6">Tourisme</option>
+                    <option value="7">Santé</option>
+                    <option value="8">Éducation</option>
+                    <option value="9">Technologie</option>
+                    <option value="10">Finance</option>
                   </select>
                 </div>
 

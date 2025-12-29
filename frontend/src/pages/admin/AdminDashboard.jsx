@@ -44,169 +44,137 @@ const AdminDashboard = () => {
           email: user.email,
           status: user.status,
           createdAt: user.created_at,
-          category: user.category?.name
+          category: user.professional_profile?.category?.name
         })) || []
       };
 
       setStats(mappedStats);
 
     } catch (err) {
-      setError('Impossible de charger les statistiques admin');
+      setError('Impossible de charger les statistiques');
+      console.error('Erreur dashboard:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const COLORS = ['#E8902C', '#0A1F33', '#0A1F33', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1'];
+  const COLORS = ['#E8902C', '#0A1F33', '#475569', '#64748b', '#94a3b8', '#cbd5e1'];
 
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-cream py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* En-tête */}
         <div className="mb-8">
-          <h1 className="text-3xl font-poppins font-title-bold text-navy">Tableau de bord Administrateur</h1>
-          <p className="text-text mt-2 font-inter font-text">Vue d'ensemble de la plateforme</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Tableau de bord</h1>
+          <p className="text-sm text-gray-600 mt-1">Vue d'ensemble de la plateforme</p>
         </div>
 
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
 
         {/* Cartes statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="bg-[#0a1f330a] p-6 rounded-card shadow-card hover:bg-[#0a1f330e]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text mb-1 font-inter font-text">Total Profils</p>
-                <p className="text-3xl font-poppins font-title-bold text-orange">{stats?.totalProfiles || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-_cream rounded-card flex items-center justify-center ">
-                <span className="text-2xl">👥</span>
-              </div>
-            </div>
-            <p className="text-sm text-text mt-2 font-inter font-text">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white border border-gray-200 p-6 rounded-lg">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Total Profils</p>
+            <p className="text-3xl font-semibold text-gray-900">{stats?.totalProfiles || 0}</p>
+            <p className="text-xs text-gray-600 mt-2">
               +{stats?.newProfilesThisMonth || 0} ce mois
             </p>
           </div>
 
-          <div className="bg-[#0a1f330a] p-6 rounded-card shadow-card hover:bg-[#0a1f3311]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text mb-1 font-inter font-text">En attente</p>
-                <p className="text-3xl font-poppins font-title-bold text-orange">{stats?.pendingProfiles || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-_cream rounded-card flex items-center justify-center">
-                <span className="text-2xl">⏳</span>
-              </div>
-            </div>
-            <Link to="/admin/profils" className="text-sm text-[#f3a44a] hover:text-orange-dark mt-2 inline-block font-inter font-text-medium text-[97%]">
+          <div className="bg-white border border-gray-200 p-6 rounded-lg">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">En attente</p>
+            <p className="text-3xl font-semibold text-orange-600">{stats?.pendingProfiles || 0}</p>
+            <Link to="/admin/profils" className="text-xs text-orange-600 hover:text-orange-700 mt-2 inline-block">
               Voir les profils →
             </Link>
           </div>
 
-          <div className="bg-[#0a1f3314] p-6 rounded-card shadow-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text mb-1 font-inter font-text">Validés</p>
-                <p className="text-3xl font-poppins font-title-bold text-green-600">{stats?.validatedProfiles || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-_cream rounded-card flex items-center justify-center">
-                <span className="text-2xl">✅</span>
-              </div>
-            </div>
-            <p className="text-sm text-text mt-2 font-inter font-text">
+          <div className="bg-white border border-gray-200 p-6 rounded-lg">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Validés</p>
+            <p className="text-3xl font-semibold text-green-600">{stats?.validatedProfiles || 0}</p>
+            <p className="text-xs text-gray-600 mt-2">
               {((stats?.validatedProfiles / stats?.totalProfiles) * 100 || 0).toFixed(1)}% du total
             </p>
           </div>
 
-          <div className="bg-[#0a1f3314] p-6 rounded-card shadow-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text mb-1 font-inter font-text">Rejetés</p>
-                <p className="text-3xl font-poppins font-title-bold text-red-600">{stats?.rejectedProfiles || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-_cream rounded-card flex items-center justify-center">
-                <span className="text-2xl">❌</span>
-              </div>
-            </div>
-            <p className="text-sm text-text mt-2 font-inter font-text">
+          <div className="bg-white border border-gray-200 p-6 rounded-lg">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Rejetés</p>
+            <p className="text-3xl font-semibold text-red-600">{stats?.rejectedProfiles || 0}</p>
+            <p className="text-xs text-gray-600 mt-2">
               {((stats?.rejectedProfiles / stats?.totalProfiles) * 100 || 0).toFixed(1)}% du total
             </p>
           </div>
         </div>
 
         {/* Actions rapides */}
-        <div className="bg-[#0a1f33a0] rounded-card shadow-card p-6 mb-12">
-          <h2 className="text-xl font-poppins font-title-bold text-white mb-4">Actions rapides</h2>
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+          <h2 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Actions rapides</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
               to="/admin/profils"
-              className="flex items-center p-4 border border-gray-warm rounded-card bg-[#fefefe5f] text-navy hover:bg-[#faf7f2c9] transition"
+              className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
             >
-              <div className="w-12 h-12 bg-[#f4ae5ee7] rounded-card flex items-center justify-center text-navy text-xl">
-                📋
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-poppins font-title-medium text-navy">Gérer les profils</h3>
-                <p className="text-sm text-text font-inter font-text">Validation et modération</p>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Gérer les profils</h3>
+                <p className="text-xs text-gray-500">Validation et modération</p>
               </div>
             </Link>
 
             <button
               onClick={() => adminService.exportUsers('excel', {})}
-              className="flex items-center p-4 border border-gray-warm rounded-card bg-[#fefefe91] text-navy hover:bg-[#faf7f2c9] transition text-left"
+              className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-left"
             >
-              <div className="w-12 h-12 bg-[#f4ae5ee7] rounded-card flex items-center justify-center text-navy text-xl">
-                📊
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-poppins font-title-medium text-navy">Exporter les données</h3>
-                <p className="text-sm text-text font-inter font-text">Excel, PDF, CSV</p>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Exporter les données</h3>
+                <p className="text-xs text-gray-500">Excel, PDF, CSV</p>
               </div>
             </button>
 
             <Link
               to="/admin/users"
-              className="flex items-center p-4 border border-gray-warm rounded-card bg-[#fefefe5f] text-navy hover:bg-[#faf7f2c9] transition"
+              className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
             >
-              <div className="w-12 h-12 bg-[#f4ae5ee7] rounded-card flex items-center justify-center text-navy text-xl">
-                👤
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-poppins font-title-medium text-navy">Gérer les utilisateurs</h3>
-                <p className="text-sm text-text font-inter font-text">Comptes et permissions</p>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Gérer les utilisateurs</h3>
+                <p className="text-xs text-gray-500">Comptes et permissions</p>
               </div>
             </Link>
           </div>
         </div>
 
         {/* Graphiques */}
-        <section className="pt-6 border border-[#627b833c] rounded-t-3xl">
-          <div className=" flex px-1 ">
-            <h2 className="w-[90%] ml-9 mb-4 text-xl font-poppins font-title-bold text-text "> Visualisation Graphique des Statistiques </h2>
-            <span id='spanCut' className=" p-1 px-2 m-auto mb-5 rounded-full border border-black cursor-pointer rotate-180"
-             onClick={
-              () => {
-                let spanCut = document.getElementById('spanCut');
-                let visualz = document.getElementById('graphics');
-                spanCut.style.transition = 'all 0.8s ease-in-out';
-                spanCut.style.backgroundColor == '' ? spanCut.style.backgroundColor='rgba(0,0,0,30%)' : spanCut.style.backgroundColor='';
-                spanCut.style.rotate == '180deg' ? spanCut.style.rotate = '0deg' : spanCut.style.rotate = '180deg';
-                visualz.style.display == '' ? visualz.style.display='none' : visualz.style.display='';
-              }
-            }> ▼ </span>
-          </div>
-          <div id='graphics' className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+          <h2 className="text-sm font-semibold text-gray-900 mb-6 uppercase tracking-wide">Statistiques</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Répartition par catégorie */}
-            <div className="bg-[#d4d4d455] rounded-card shadow-card p-3 border-2 rounded-e-3xl group [perspective:100px] ">
-              <h2 className="text-xl font-poppins font-title-bold text-navy mb-4 border-b border-[#627b838c] pb-1">Répartition par catégorie</h2>
+            <div className="border-l-2 border-gray-200 pl-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-4">Répartition par catégorie</h3>
               {stats?.categoryDistribution && stats.categoryDistribution.length > 0 ? (
-                <div className="flex justify-center bg-[#ffffff67]">
-                  <PieChart width={350} height={300}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
                     <Pie
                       data={stats.categoryDistribution}
-                      cx={175}
-                      cy={150}
+                      cx="50%"
+                      cy="50%"
                       labelLine={false}
                       label={(entry) => entry.name}
                       outerRadius={80}
@@ -219,98 +187,102 @@ const AdminDashboard = () => {
                     </Pie>
                     <Tooltip />
                   </PieChart>
-                </div>
+                </ResponsiveContainer>
               ) : (
-                <p className="text-center text-text py-8 font-inter font-text">Aucune donnée disponible</p>
+                <p className="text-center text-gray-500 py-8 text-sm">Aucune donnée disponible</p>
               )}
             </div>
 
             {/* Évolution des inscriptions */}
-            <div className="bg-[#0a1f3397] rounded-card shadow-card p-6">
-              <h2 className="text-xl font-poppins font-title-bold text-white mb-4 border-b pb-1">Inscriptions (6 derniers mois)</h2>
+            <div className="border-l-2 border-gray-200 pl-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-4">Inscriptions (6 derniers mois)</h3>
               {stats?.registrationTrend && stats.registrationTrend.length > 0 ? (
-                <div class="h-[300px] bg-[#ffffffd8]">
-                  <ResponsiveContainer>
-                    <BarChart width={500} height={300} data={stats.registrationTrend}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="count" fill="#E8902C" name="Inscriptions" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={stats.registrationTrend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#E8902C" name="Inscriptions" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               ) : (
-                <p className="text-center text-white py-8 font-inter font-text">Aucune donnée disponible</p>
+                <p className="text-center text-gray-500 py-8 text-sm">Aucune donnée disponible</p>
               )}
             </div>
           </div>
-        </section>
+        </div>
 
         {/* Profils récents */}
-        <div className="bg-[#0a1f3397] rounded-card shadow-card p-6 mt-12 mb-3">
-          <h2 className="text-xl font-poppins font-title-bold text-white mb-4">Dernières inscriptions</h2>
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Dernières inscriptions</h2>
+          </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-warm">
-              <thead>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-inter font-text-medium text-white uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nom
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-inter font-text-medium text-white uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Catégorie
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-inter font-text-medium text-white uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Statut
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-inter font-text-medium text-white uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-inter font-text-medium text-white uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-[#0a1f33] divide-y divide-gray-warm">
-                {stats?.recentProfiles?.map((profile) => (
-                  <tr key={profile.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-inter font-text-medium text-white">
-                        {profile.name}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-inter font-text">
-                      {profile.category || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full font-inter font-text-medium ${
-                          profile.status === 'validated'
-                            ? 'bg-cream text-green-800 border border-green-600'
-                            : profile.status === 'rejected'
-                            ? 'bg-cream text-red-800 border border-red-600'
-                            : 'bg-cream text-orange border border-orange'
-                        }`}
-                      >
-                        {profile.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-inter font-text">
-                      {new Date(profile.createdAt).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <Link
-                        to={`/admin/profils/${profile.id}`}
-                        className="text-[#e7af6e] hover:text-orange-dark font-inter font-text-medium"
-                      >
-                        Voir
-                      </Link>
-                    </td>
-                  </tr>
-                )) || (
+              <tbody className="bg-white divide-y divide-gray-200">
+                {stats?.recentProfiles && stats.recentProfiles.length > 0 ? (
+                  stats.recentProfiles.map((profile) => (
+                    <tr key={profile.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {profile.name}
+                        </div>
+                        <div className="text-xs text-gray-500">{profile.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {profile.category || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            profile.status === 'active'
+                              ? 'bg-green-100 text-green-800'
+                              : profile.status === 'rejected'
+                              ? 'bg-red-100 text-red-800'
+                              : profile.status === 'suspended'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-orange-100 text-orange-800'
+                          }`}
+                        >
+                          {profile.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {new Date(profile.createdAt).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <Link
+                          to={`/admin/profils/${profile.id}`}
+                          className="text-orange-600 hover:text-orange-700 font-medium"
+                        >
+                          Voir
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
                   <tr>
-                    <td colSpan="5" className="px-6 py-4 text-center text-white font-inter font-text">
+                    <td colSpan="5" className="px-6 py-8 text-center text-sm text-gray-500">
                       Aucune inscription récente
                     </td>
                   </tr>

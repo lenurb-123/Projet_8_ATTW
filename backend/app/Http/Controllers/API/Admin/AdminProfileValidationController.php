@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProfessionalProfile;
+use App\Models\User;
+use Illuminate\Http\Request;
 use App\Http\Requests\Admin\RejectProfileRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -29,13 +31,43 @@ class AdminProfileValidationController extends Controller
 
     public function show($id): JsonResponse
     {
+        // Chercher d'abord par ProfessionalProfile ID
         $profile = ProfessionalProfile::with([
             'user',
             'category',
             'sector',
             'user.academicEducations',
             'user.professionalExperiences'
-        ])->findOrFail($id);
+        ])->find($id);
+
+        // Si pas trouvé, chercher par User ID
+        if (!$profile) {
+            $user = User::with([
+                'professionalProfile',
+                'category',
+                'academicEducations',
+                'professionalExperiences'
+            ])->findOrFail($id);
+
+            // Si le user a un profil professionnel, retourner le profil
+            if ($user->professionalProfile) {
+                $profile = $user->professionalProfile;
+                $profile->load(['user', 'category', 'sector', 'user.academicEducations', 'user.professionalExperiences']);
+            } else {
+                // Créer un profil vide pour l'affichage
+                $profile = (object) [
+                    'id' => null,
+                    'user' => $user,
+                    'category' => $user->category,
+                    'sector' => null,
+                    'cv_url' => null,
+                    'photo_url' => null,
+                    'approved_at' => null,
+                    'rejection_reason' => null,
+                    'created_at' => $user->created_at,
+                ];
+            }
+        }
 
         return response()->json($profile);
     }

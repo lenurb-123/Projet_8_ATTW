@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('professional_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('category_id')->constrained('professional_categories');
-            $table->foreignId('sector_id')->constrained('activity_sectors');
+            $table->foreignId('category_id')->nullable()->constrained('professional_categories');
+            $table->foreignId('sector_id')->nullable()->constrained('activity_sectors');
             $table->text('biography')->nullable();
             $table->integer('years_experience')->default(0);
             $table->string('current_position')->nullable();
             $table->string('company_name')->nullable();
-            $table->enum('education_level', ['bac', 'bac_2', 'bac_3', 'bac_5', 'doctorate'])->nullable();
+            $table->string('education_level')->nullable(); // Changé de ENUM à STRING pour plus de flexibilité
             $table->json('skills')->nullable();
             $table->json('languages')->nullable();
             $table->json('professional_interests')->nullable();

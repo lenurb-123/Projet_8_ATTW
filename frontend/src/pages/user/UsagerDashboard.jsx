@@ -14,6 +14,7 @@ const UsagerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -23,13 +24,16 @@ const UsagerDashboard = () => {
     try {
       const userData = await authService.getCurrentUser();
       setUser(userData);
-      setProfile(userData); // Pour compatibilité avec ton design
+      setProfile(userData);
       
+      // Le statut professionnel vient de professional_profile, pas de l'utilisateur
       try {
         const statusData = await professionalService.getValidationStatus();
         setStatus(statusData.status || 'incomplete');
       } catch (err) {
-        setStatus(userData.professional_profile?.status || 'incomplete');
+        // Si pas de professional_profile, le statut est 'incomplete'
+        const profStatus = userData.professional_profile?.status;
+        setStatus(profStatus || 'incomplete');
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -40,14 +44,44 @@ const UsagerDashboard = () => {
   };
 
   const handleSubmit = async () => {
+    // Validation du profil avant soumission
+    if (!user?.first_name || !user?.last_name || !user?.phone) {
+      setError('Veuillez compléter vos informations personnelles (nom, prénom, téléphone) avant de soumettre votre profil.');
+      return;
+    }
+
+    if (!user?.profession || !user?.secteur) {
+      setError('Veuillez renseigner votre profession et secteur d\'activité avant de soumettre votre profil.');
+      return;
+    }
+
+    // Vérifier que les documents requis sont uploadés
+    if (!profile?.professional_profile?.profile_photo_url) {
+      setError('Veuillez uploader votre photo de profil avant de soumettre.');
+      return;
+    }
+
+    if (!profile?.professional_profile?.cv_url) {
+      setError('Veuillez uploader votre CV avant de soumettre.');
+      return;
+    }
+
+    const legalDocs = profile?.professional_profile?.legal_documents;
+    if (!legalDocs || !Array.isArray(legalDocs) || legalDocs.length === 0) {
+      setError('Veuillez uploader au moins un document légal (Kbis, certificat, etc.) avant de soumettre.');
+      return;
+    }
+
     if (window.confirm('Êtes-vous sûr de vouloir soumettre votre profil pour validation ?')) {
       setSubmitting(true);
+      setError(null);
+      setSuccess(null);
       try {
         await professionalService.submitForApproval();
-        alert('Profil soumis avec succès ! Vous recevrez une notification par email.');
+        setSuccess('Profil soumis avec succès ! Vous recevrez une notification par email.');
         fetchData();
       } catch (error) {
-        alert(error.response?.data?.message || 'Erreur lors de la soumission');
+        setError(error.response?.data?.message || 'Erreur lors de la soumission');
       } finally {
         setSubmitting(false);
       }
@@ -61,14 +95,14 @@ const UsagerDashboard = () => {
   const getStatusBadge = () => {
     const badges = {
       incomplete: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Incomplet' },
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'En attente' },
+      pending: { bg: 'bg-orange-100', text: 'text-orange-700', label: 'En attente' },
       approved: { bg: 'bg-green-100', text: 'text-green-700', label: 'Validé' },
       rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'Rejeté' }
     };
     
     const badge = badges[status] || badges.incomplete;
     return (
-      <span className={`px-4 py-2 rounded-full text-sm font-medium ${badge.bg} ${badge.text}`}>
+      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.text}`}>
         {badge.label}
       </span>
     );
@@ -84,12 +118,12 @@ const UsagerDashboard = () => {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-[#0A1F33]">
+            <h1 className="text-xl font-semibold text-gray-900">
               Tableau de bord
             </h1>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-[#0A1F33] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors"
             >
               <FiLogOut size={18} />
               <span className="hidden sm:inline">Déconnexion</span>
@@ -102,92 +136,66 @@ const UsagerDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-[#0A1F33] mb-2">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
             Bienvenue {user?.first_name} {user?.last_name}
           </h2>
           <div className="flex items-center gap-3">
-            <span className="text-gray-600">Statut de votre profil :</span>
+            <span className="text-sm text-gray-600">Statut de votre profil :</span>
             {getStatusBadge()}
           </div>
         </div>
 
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
+        {success && <Alert type="success" message={success} onClose={() => setSuccess(null)} />}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Carte Statut */}
-          <div className="bg-[#0a1f33ce] p-6 rounded-card shadow-card hover:bg-[#0a1f3382]">
-            <h3 className="text-sm font-inter font-text-medium text-[#FFFF] mb-2">Statut du profil</h3>
-            <div className="flex items-center">
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-inter font-text-medium ${
-                  profile?.user?.status === 'active' || status === 'approved'
-                    ? 'bg-cream border-2 border-orange text-navy'
-                    : profile?.user?.status === 'suspended'
-                    ? 'bg-cream border-2 border-red-500 text-navy'
-                    : 'bg-cream border-2 border-orange-dark text-navy'
-                }`}
-              >
-                {PROFILE_STATUS_LABELS[profile?.user?.status || status] || PROFILE_STATUS_LABELS[status] || 'Non défini'}
-              </span>
-            </div>
-            <Link
-              to="/usager/statut"
-              className="mt-4 text-[#fab941] hover:text-[#ffd992] text-sm inline-block font-inter font-text-medium">
-              Voir les détails →
-            </Link>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Carte Biographie */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Biographie</h3>
+            <p className="text-sm text-gray-900 line-clamp-2">
+              {profile?.professional_profile?.biography || 'Non renseignée'}
+            </p>
           </div>
 
-          {/* Carte Profil */}
-          <div className="bg-[#0a1f33ae] p-6 rounded-card shadow-card">
-            <h3 className="text-sm font-inter font-text-medium text-[#FFFF] mb-2">Biographie</h3>
-            <div className="flex items-center">
-              <div className="text-xl font-poppins font-title-bold text-orange">
-                {profile?.professional_profile?.biography || 'N/A'}
-              </div>
-            </div>
-          </div>
-
-          {/* Carte Info supplémentaire */}
-          <div className="bg-[#0a1f33ae] p-6 rounded-card shadow-card">
-            <h3 className="text-sm font-inter font-text-medium text-[#FFFF] mb-2">Profession</h3>
-            <div className="flex items-center">
-              <div className="text-xl font-poppins font-title-bold text-orange">
-                {user?.profession || 'Non renseignée'}
-              </div>
-            </div>
+          {/* Carte Profession */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Profession</h3>
+            <p className="text-sm text-gray-900">
+              {user?.profession || 'Non renseignée'}
+            </p>
           </div>
         </div>
 
         {/* Actions rapides */}
-        <div className="bg-[#0a1f3317] rounded-card shadow-card p-6 mb-8">
-          <h2 className="text-xl font-poppins font-title-bold text-navy mb-4">Actions rapides</h2>
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+          <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">Actions rapides</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
               to="/usager/profil/edit"
-              className="flex items-center p-4 border-2 border-gray-warm rounded-card hover:border-orange hover:bg-[#f9fafb99] transition"
+              className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
             >
-              <div className="w-12 h-12 bg-[#fab94190] rounded-card flex items-center justify-center text-navy text-xl">
-                <FiEdit2 size={24} />
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FiEdit2 size={20} className="text-blue-600" />
               </div>
-              <div className="ml-4">
-                <h3 className="font-poppins font-title text-navy">Modifier mon profil</h3>
-                <p className="text-sm text-gray-700 font-inter">Mettez à jour vos informations</p>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Modifier mon profil</h3>
+                <p className="text-xs text-gray-500">Mettez à jour vos informations</p>
               </div>
             </Link>
 
             <button
               onClick={handleSubmit}
               disabled={submitting || status === 'pending'}
-              className="flex items-center p-4 border-2 border-[#E8902C] rounded-card hover:bg-[#E8902C] hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-3 p-4 border border-orange-200 rounded-lg hover:bg-orange-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="w-12 h-12 bg-[#E8902C20] rounded-card flex items-center justify-center text-[#E8902C] text-xl">
-                <FiSend size={24} />
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <FiSend size={20} className="text-orange-600" />
               </div>
-              <div className="ml-4">
-                <h3 className="font-poppins font-title">
+              <div className="text-left">
+                <h3 className="text-sm font-medium text-gray-900">
                   {submitting ? 'Soumission...' : 'Soumettre pour validation'}
                 </h3>
-                <p className="text-sm font-inter">
+                <p className="text-xs text-gray-500">
                   {status === 'pending' ? 'Déjà en attente' : 'Faire valider mon profil'}
                 </p>
               </div>
@@ -197,23 +205,23 @@ const UsagerDashboard = () => {
 
         {/* Messages de statut */}
         {status === 'pending' && (
-          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-card p-6 mb-8">
-            <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-8">
+            <h3 className="text-sm font-semibold text-orange-900 mb-1">
               Profil en cours d'examen
             </h3>
-            <p className="text-sm text-yellow-700">
+            <p className="text-xs text-orange-700">
               Votre profil est actuellement en cours de validation par l'administration. 
-              Vous recevrez une notification par email dès qu'une décision sera prise.
+              
             </p>
           </div>
         )}
 
         {status === 'approved' && (
-          <div className="bg-green-50 border-2 border-green-200 rounded-card p-6 mb-8">
-            <h3 className="text-lg font-semibold text-green-800 mb-2">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+            <h3 className="text-sm font-semibold text-green-900 mb-1">
               Profil validé ✓
             </h3>
-            <p className="text-sm text-green-700">
+            <p className="text-xs text-green-700">
               Félicitations ! Votre profil est maintenant visible dans l'annuaire public.
             </p>
           </div>
@@ -221,50 +229,50 @@ const UsagerDashboard = () => {
 
         {/* Aperçu du profil */}
         {profile && (
-          <div className="bg-[#0a1f330e] rounded-card shadow-card p-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-poppins font-title-bold text-navy">Aperçu du profil</h2>
+              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Aperçu du profil</h2>
               <Link
                 to="/usager/profil/edit"
-                className="p-2 border-2 border-gray-warm rounded-card hover:border-orange hover:bg-[#f9fafb99] transition text-[black] hover:text-orange-dark text-sm font-inter font-text-medium">
+                className="text-sm text-orange-600 hover:text-orange-700 font-medium">
                 Modifier
               </Link>
             </div>
 
             <div className="flex items-start">
-              <div className="ml-6 flex-1">
-                <h3 className="text-2xl font-poppins font-title-bold text-navy">
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-gray-900">
                   {profile?.first_name || profile?.user?.first_name} {profile?.last_name || profile?.user?.last_name}
                 </h3>
-                <p className="text-gray-900 mt-1">{profile?.profession || profile?.user?.profession}</p>
-                <p className="text-gray-900">{(profile?.secteur || profile?.user?.secteur)?.toUpperCase()}</p>
+                <p className="text-sm text-gray-600 mt-1">{profile?.profession || profile?.user?.profession}</p>
+                <p className="text-sm text-gray-500">{(profile?.secteur || profile?.user?.secteur)?.toUpperCase()}</p>
 
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-700 mb-2 border-b-2 border-b-[#00000041] w-1/2">Email</p>
-                    <p className="text-gray-900">{profile?.email || profile?.user?.email}</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Email</p>
+                    <p className="text-sm text-gray-900">{profile?.email || profile?.user?.email}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-700 mb-2 border-b-2 border-b-[#00000041] w-1/2">Téléphone</p>
-                    <p className="text-gray-900">{profile?.phone || profile?.user?.phone || 'Non renseigné'}</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Téléphone</p>
+                    <p className="text-sm text-gray-900">{profile?.phone || profile?.user?.phone || 'Non renseigné'}</p>
                   </div>
                 </div>
 
                 {profile?.professional_experiences && profile.professional_experiences.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-sm text-gray-700 mb-2 border-b-2 border-b-[#00000041] w-1/4">
-                      Nombre de domaines d'expériences
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      Expériences professionnelles
                     </p>
-                    <p className="text-gray-900">{profile.professional_experiences.length}</p>
+                    <p className="text-sm text-gray-900">{profile.professional_experiences.length}</p>
                   </div>
                 )}
 
                 {profile?.academic_educations && profile.academic_educations.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-sm text-gray-700 mb-2 border-b-2 border-b-[#00000041] w-1/4">
-                      Nombre d'antécédents académiques
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      Formations académiques
                     </p>
-                    <p className="text-gray-900">{profile.academic_educations.length}</p>
+                    <p className="text-sm text-gray-900">{profile.academic_educations.length}</p>
                   </div>
                 )}
               </div>

@@ -82,7 +82,17 @@ class ProfessionalProfileController extends Controller
         $profile = $user->professionalProfile;
 
         if (!$profile) {
-            $profile = ProfessionalProfile::create(['user_id' => $user->id]);
+            $profileData = ['user_id' => $user->id];
+            
+            // Ajouter category_id et sector_id s'ils sont fournis
+            if ($request->has('category_id')) {
+                $profileData['category_id'] = $request->category_id;
+            }
+            if ($request->has('sector_id')) {
+                $profileData['sector_id'] = $request->sector_id;
+            }
+            
+            $profile = ProfessionalProfile::create($profileData);
         }
 
         switch ($documentType) {

@@ -35,6 +35,8 @@ class User extends Authenticatable
         'phone',
         'profession',
         'secteur',
+        'city',
+        'country',
         'newsletter_subscribed',
     ];
 

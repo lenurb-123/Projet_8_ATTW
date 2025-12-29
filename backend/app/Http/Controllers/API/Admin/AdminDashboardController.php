@@ -30,7 +30,8 @@ class AdminDashboardController extends Controller
                 'pending' => ProfessionalProfile::whereNull('approved_at')->count(),
             ],
             'categories_count' => Category::count(),
-            'recent_users' => User::with('category')
+            'recent_users' => User::with(['professionalProfile.category'])
+                ->where('role', '!=', User::ROLE_ADMIN)
                 ->latest()
                 ->take(5)
                 ->get(['id', 'first_name', 'last_name', 'email', 'created_at', 'status', 'role']),
@@ -60,7 +61,8 @@ class AdminDashboardController extends Controller
                 ->orderBy('users_count', 'desc')
                 ->take(5)
                 ->get(),
-            'recent_users' => User::with('category')
+            'recent_users' => User::with(['professionalProfile.category'])
+                ->where('role', '!=', User::ROLE_ADMIN)
                 ->latest()
                 ->take(10)
                 ->get(['id', 'first_name', 'last_name', 'email', 'status', 'role', 'created_at']),

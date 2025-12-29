@@ -16,6 +16,8 @@ class UploadDocumentRequest extends FormRequest
         return [
             'document_type' => ['required', 'in:profile_photo,cv,legal_document'],
             'file' => ['required', 'file'],
+            'category_id' => ['nullable', 'exists:professional_categories,id'],
+            'sector_id' => ['nullable', 'exists:activity_sectors,id'],
         ];
     }
 

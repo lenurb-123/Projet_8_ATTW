@@ -1,25 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { profileService } from '../../services/allServices';
+import { profileService, professionalService } from '../../services/allServices';
 import Loader from '../../components/common/Loader';
 import Alert from '../../components/common/Alert';
-import { CATEGORIES, EDUCATION_LEVELS } from '../../constants/categories';
+import { CATEGORIES, EDUCATION_LEVELS, getCategoryBackendId } from '../../constants/categories';
+import { SECTORS, getSectorIdByName } from '../../constants/sectors';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiBriefcase, FiFileText, FiCamera, FiPlus, FiTrash2, FiMapPin, FiPhone, FiEye } from 'react-icons/fi';
 
-const TabButton = ({ active, onClick, children, icon }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`flex items-center gap-2 px-6 py-4 text-sm font-inter font-text-medium transition-all duration-300 border-b-2 ${active
-      ? 'border-orange text-navy scale-105'
-      : 'border-transparent text-gray-500 hover:text-navy hover:bg-gray-50'
-      }`}
-  >
-    {icon}
-    {children}
-  </button>
-);
+const StepIndicator = ({ step, currentStep, label, icon }) => {
+  const isCompleted = currentStep > step;
+  const isActive = currentStep === step;
+  
+  return (
+    <div className="flex items-center">
+      <div className="flex flex-col items-center">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
+          isCompleted 
+            ? 'bg-green-600 text-white' 
+            : isActive 
+            ? 'bg-orange text-white scale-110' 
+            : 'bg-gray-200 text-gray-400'
+        }`}>
+          {isCompleted ? '✓' : step}
+        </div>
+        <span className={`text-xs mt-2 font-medium ${isActive ? 'text-navy' : 'text-gray-400'}`}>
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+};
 
 const DocumentListItem = ({ type, file, onDelete, index }) => (
   <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all">
@@ -66,7 +77,8 @@ const EditProfil = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState('personal');
+  const [currentStep, setCurrentStep] = useState(1); // 1, 2, ou 3
+  const [canSubmit, setCanSubmit] = useState(false); // Empêcher la soumission automatique
   const [files, setFiles] = useState({ photo: null, cv: null, legal: [] });
 
   const [formData, setFormData] = useState({
@@ -78,7 +90,9 @@ const EditProfil = () => {
     address: '',
     city: '',
     country: '',
+    profession: '',
     category: '',
+    secteur: '',
     sector: '',
     education_level: '',
     skills: '',
@@ -145,7 +159,9 @@ const EditProfil = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const data = await profileService.getMyProfile();
+      const response = await profileService.getMyProfile();
+      const data = response.user || response; // Backend retourne {user: {...}, professional_profile: {...}}
+      const professionalProfile = data.professional_profile || response.professional_profile || {};
 
       setFormData({
         first_name: data.first_name || data.firstName || '',
@@ -156,19 +172,21 @@ const EditProfil = () => {
         address: data.address || '',
         city: data.city || '',
         country: data.country || '',
-        category: data.category || '',
-        sector: data.sector || '',
-        education_level: data.education_level || data.educationLevel || '',
-        skills: data.skills || '',
-        bio: data.bio || '',
+        profession: data.profession || '',
+        category: data.category_id || data.category || professionalProfile.category_id || '',
+        secteur: data.secteur || '',
+        sector: data.secteur || data.sector || '',
+        education_level: professionalProfile.education_level || data.education_level || data.educationLevel || '',
+        skills: professionalProfile.skills || data.skills || '',
+        bio: professionalProfile.biography || data.bio || '',
         experiences: (data.experiences && Array.isArray(data.experiences)) ? data.experiences : []
       });
 
-      // Set existing files
+      // Set existing files from professional_profile
       setFiles({
-        photo: data.photoUrl || data.photo || null,
-        cv: data.cvUrl || data.cv || null,
-        legal: data.legalDocs || []
+        photo: professionalProfile.profile_photo_url || data.photoUrl || data.photo || null,
+        cv: professionalProfile.cv_url || data.cvUrl || data.cv || null,
+        legal: professionalProfile.legal_documents || data.legalDocs || []
       });
 
     } catch (err) {
@@ -180,36 +198,156 @@ const EditProfil = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    
+    // BLOQUER la soumission si elle n'a pas été explicitement autorisée
+    if (!canSubmit) {
+      return;
+    }
+    
+    // Ne pas soumettre si on upload encore
+    if (uploading) {
+      setError("Veuillez attendre la fin de l'upload avant de soumettre");
+      return;
+    }
+    
+    // Ne permettre la soumission qu'à l'étape 3
+    if (currentStep !== 3) {
+      return;
+    }
+    
     try {
+      setLoading(true);
       setError(null);
       setSuccess(null);
 
       // Basic validation if needed, or rely on backend
       if (!formData.first_name || !formData.last_name) {
-        setError("Veuillez remplir les champs obligatoires");
+        setError("Veuillez remplir votre nom et prénom");
+        setCurrentStep(1); // Switch to step 1
         return;
       }
 
-      await profileService.updateProfile(formData.id, formData);
-      setSuccess('Profil mis à jour avec succès');
-      setTimeout(() => navigate('/usager/dashboard'), 2000);
+      if (!formData.profession) {
+        setError("Veuillez renseigner votre profession");
+        setCurrentStep(2); // Switch to step 2
+        return;
+      }
+
+      if (!formData.secteur && !formData.sector) {
+        setError("Veuillez renseigner votre secteur d'activité");
+        setCurrentStep(2); // Switch to step 2
+        return;
+      }
+
+      // Map frontend fields to backend expected fields (seulement les champs de la table users)
+      const profileData = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone: formData.phone,
+        profession: formData.profession || formData.category || '',
+        secteur: formData.secteur || formData.sector || '',
+      };
+
+      // Sauvegarder le profil utilisateur (table users)
+      await profileService.updateProfile(profileData);
+      
+      // Sauvegarder les données professionnelles (table professional_profiles)
+      const skillsArray = formData.skills 
+        ? (Array.isArray(formData.skills) ? formData.skills : formData.skills.split(',').map(s => s.trim()).filter(s => s))
+        : ['Compétence à définir'];
+      
+      // Valider et limiter la biographie
+      let bio = formData.bio || '';
+      if (bio.length < 50) {
+        bio = bio + ' Profil professionnel en cours de rédaction.'.padEnd(50 - bio.length, '.');
+      }
+      if (bio.length > 2000) {
+        bio = bio.substring(0, 2000);
+      }
+      
+      // Valider education_level
+      const validEducationLevels = ['bac', 'licence', 'master', 'doctorat', 'ingenieur', 'autre'];
+      const educationLevel = validEducationLevels.includes(formData.education_level) 
+        ? formData.education_level 
+        : 'bac';
+      
+      const professionalData = {
+        category_id: getCategoryBackendId(formData.category) || 1,
+        sector_id: getSectorIdByName(formData.secteur || formData.sector) || 1,
+        biography: bio,
+        years_experience: formData.experiences?.length || 0,
+        current_position: formData.profession || 'Poste à définir',
+        company_name: formData.experiences?.[0]?.company || '',
+        education_level: educationLevel,
+        skills: skillsArray,
+        is_public: true,
+      };
+      
+      // Appeler l'endpoint pour créer/mettre à jour le professional_profile
+      try {
+        await professionalService.saveProfessionalProfile(professionalData);
+      } catch (profError) {
+        // Afficher l'erreur à l'utilisateur
+        const validationErrors = profError.response?.data?.errors;
+        if (validationErrors) {
+          const errorMessages = Object.entries(validationErrors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('\n');
+          setError(`Erreur de validation du profil professionnel:\n${errorMessages}`);
+          setLoading(false);
+          return;
+        }
+      }
+      
+      setSuccess('Profil mis à jour avec succès. Vous pouvez maintenant le soumettre pour validation depuis votre tableau de bord.');
+      // Rediriger après 3 secondes pour laisser le temps de lire le message
+      setTimeout(() => navigate('/usager/dashboard'), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors de la mise à jour');
+      console.error('Erreur mise à jour profil:', err.response?.data);
+      const backendErrors = err.response?.data?.errors;
+      if (backendErrors) {
+        const errorMessages = Object.values(backendErrors).flat().join(', ');
+        setError(`Erreur de validation : ${errorMessages}`);
+      } else {
+        setError(err.response?.data?.message || 'Erreur lors de la mise à jour');
+      }
+      // Scroll to top to show error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleFileUpload = async (event, type) => {
     const fileList = event.target.files;
     if (!fileList || fileList.length === 0) return;
-
+    
     setUploading(true);
     setError(null);
 
     try {
+      // Préparer les données additionnelles (category_id et sector_id)
+      const additionalData = {};
+      
+      // Récupérer category_id depuis formData.category (convertir le slug en ID backend)
+      if (formData.category) {
+        const categoryBackendId = getCategoryBackendId(formData.category);
+        if (categoryBackendId) {
+          additionalData.category_id = categoryBackendId;
+        }
+      }
+      
+      // Pour sector_id, chercher l'ID correspondant au nom du secteur
+      if (formData.secteur || formData.sector) {
+        const sectorName = formData.secteur || formData.sector;
+        const sectorId = getSectorIdByName(sectorName);
+        if (sectorId) {
+          additionalData.sector_id = sectorId;
+        }
+      }
+
       // Loop through all selected files
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
-        const response = await profileService.uploadFile(file, type);
+        const response = await profileService.uploadFile(file, type, additionalData);
         const fileUrl = response?.url || URL.createObjectURL(file);
 
         setFiles(prev => {
@@ -226,7 +364,8 @@ const EditProfil = () => {
           }
         });
       }
-      setSuccess(`${type === 'legal' ? 'Documents uploadés' : 'Fichier uploadé'} avec succès`);
+      // Ne pas afficher de message de succès ni rediriger après l'upload
+      // L'utilisateur doit cliquer sur "Enregistrer" pour finaliser
     } catch (err) {
       console.error("Upload error details:", err);
       const errorMessage = err.response?.data?.message || err.message || "Erreur inconnue";
@@ -234,6 +373,36 @@ const EditProfil = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleNext = () => {
+    // Validate current step before moving to next
+    if (currentStep === 1) {
+      if (!formData.first_name || !formData.last_name) {
+        setError("Veuillez remplir au minimum votre nom et prénom avant de continuer");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
+    
+    if (currentStep === 2) {
+      if (!formData.profession || !formData.secteur) {
+        setError("Veuillez remplir votre profession et secteur d'activité avant de continuer");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
+    
+    setError(null);
+    const nextStep = Math.min(currentStep + 1, 3);
+    setCurrentStep(nextStep);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePrevious = () => {
+    setError(null);
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteFile = async (type, index = null) => {
@@ -313,49 +482,57 @@ const EditProfil = () => {
             </div>
           )}
 
-          <form onSubmit={onSubmit}>
-            {/* Tabs Navigation */}
-            <div className="flex flex-wrap border-b border-gray-100 px-4 md:px-8 bg-white/50 backdrop-blur-sm pt-4">
-              <TabButton
-                active={activeTab === 'personal'}
-                onClick={() => setActiveTab('personal')}
-                icon={<FiUser className="text-lg" />}
-              >
-                Infos Personnelles
-              </TabButton>
-              <TabButton
-                active={activeTab === 'professional'}
-                onClick={() => setActiveTab('professional')}
-                icon={<FiBriefcase className="text-lg" />}
-              >
-                Infos Professionnelles
-              </TabButton>
-              <TabButton
-                active={activeTab === 'documents'}
-                onClick={() => setActiveTab('documents')}
-                icon={<FiFileText className="text-lg" />}
-              >
-                Documents
-              </TabButton>
+          {/* Step Indicator */}
+          <div className="border-b border-gray-100 px-4 md:px-8 py-6 bg-white">
+            <div className="max-w-md mx-auto">
+              <div className="flex items-center justify-between">
+                <StepIndicator step={1} currentStep={currentStep} label="Infos Personnelles" />
+                <div className="flex-1 h-0.5 bg-gray-200 mx-4">
+                  <div className={`h-full transition-all duration-300 ${currentStep > 1 ? 'bg-green-600 w-full' : 'bg-gray-200 w-0'}`}></div>
+                </div>
+                <StepIndicator step={2} currentStep={currentStep} label="Infos Professionnelles" />
+                <div className="flex-1 h-0.5 bg-gray-200 mx-4">
+                  <div className={`h-full transition-all duration-300 ${currentStep > 2 ? 'bg-green-600 w-full' : 'bg-gray-200 w-0'}`}></div>
+                </div>
+                <StepIndicator step={3} currentStep={currentStep} label="Documents" />
+              </div>
             </div>
+          </div>
 
-            {/* Content Area */}
-            <div className="p-6 md:p-10 bg-white">
-              <AnimatePresence mode="wait">
-                {activeTab === 'personal' && (
-                  <motion.div
-                    key="personal"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="space-y-8"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                      <div className="col-span-full mb-4">
-                        <h2 className="text-lg font-poppins font-title text-navy border-b border-gray-100 pb-2">
-                          Identité et Contact
-                        </h2>
-                      </div>
+          <form 
+            onSubmit={onSubmit} 
+            onKeyDown={(e) => {
+              // Bloquer Enter sur tout le formulaire sauf dans les textareas
+              if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+              }
+            }}
+            className="p-4 md:p-8 space-y-6" 
+            noValidate
+          >
+            <AnimatePresence mode="wait">
+              {currentStep === 1 && (
+                <motion.div
+                  key="personal"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-8"
+                >
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-1">
+                      Informations Personnelles
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      Remplissez vos informations de base
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div>
+                      <label className="label-form">
+                        Nom <span className="text-error-red">*</span>
+                      </label>
 
                       {/* Form Inputs */}
                       <div className="space-y-1">
@@ -470,26 +647,30 @@ const EditProfil = () => {
                         />
                       </div>
                     </div>
-                  </motion.div>
-                )}
+                  </div>
+                </motion.div>
+              )}
 
-                {activeTab === 'professional' && (
-                  <motion.div
-                    key="professional"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="space-y-8"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                      <div className="col-span-full">
-                        <h2 className="text-lg font-poppins font-title text-navy border-b border-gray-100 pb-2 mb-4">
-                          Carrière et Compétences
-                        </h2>
-                      </div>
+              {currentStep === 2 && (
+                <motion.div
+                  key="professional"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-8"
+                >
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-1">
+                      Informations Professionnelles
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      Complétez votre profil professionnel
+                    </p>
+                  </div>
 
-                      <div className="space-y-1">
-                        <label className="text-sm font-text-medium text-navy ml-1">Catégorie Professionnelle *</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div>
+                      <label className="label-form">Catégorie Professionnelle</label>
                         <select
                           name="category"
                           value={formData.category || ''}
@@ -504,15 +685,30 @@ const EditProfil = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-sm font-text-medium text-navy ml-1">Secteur d'activité *</label>
+                        <label className="text-sm font-text-medium text-navy ml-1">Profession *</label>
                         <input
                           type="text"
-                          name="sector"
-                          value={formData.sector || ''}
+                          name="profession"
+                          value={formData.profession || formData.category || ''}
                           onChange={handleChange}
                           className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-orange focus:ring-1 focus:ring-orange transition bg-cream/50"
-                          placeholder="Ex: Informatique, Santé, BTP..."
+                          placeholder="Ex: Développeur, Médecin, Architecte..."
                         />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-sm font-text-medium text-navy ml-1">Secteur d'activité *</label>
+                        <select
+                          name="secteur"
+                          value={formData.secteur || formData.sector || ''}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-orange focus:ring-1 focus:ring-orange transition bg-cream/50"
+                        >
+                          <option value="">Sélectionner un secteur</option>
+                          {SECTORS.map(sector => (
+                            <option key={sector.id} value={sector.name}>{sector.name}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-1">
@@ -645,7 +841,7 @@ const EditProfil = () => {
                   </motion.div>
                 )}
 
-                {activeTab === 'documents' && (
+                {currentStep === 3 && (
                   <motion.div
                     key="documents"
                     initial={{ opacity: 0, y: 10 }}
@@ -678,7 +874,8 @@ const EditProfil = () => {
                             type="file"
                             name="cv"
                             accept=".pdf,.doc,.docx"
-                            onChange={(e) => handleFileUpload(e, 'cv')}
+                            onChange={(e) => { e.stopPropagation(); handleFileUpload(e, 'cv'); }}
+                            onClick={(e) => e.stopPropagation()}
                             disabled={uploading}
                             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-navy/10 file:text-navy hover:file:bg-navy/20 transition"
                           />
@@ -701,7 +898,8 @@ const EditProfil = () => {
                             name="legal_docs[]"
                             multiple
                             accept=".pdf"
-                            onChange={(e) => handleFileUpload(e, 'legal')}
+                            onChange={(e) => { e.stopPropagation(); handleFileUpload(e, 'legal'); }}
+                            onClick={(e) => e.stopPropagation()}
                             disabled={uploading}
                             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition"
                           />
@@ -736,24 +934,57 @@ const EditProfil = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
 
-            {/* Footer / Actions */}
-            <div className="px-6 md:px-10 py-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 rounded-b-card">
-              <button
-                type="button"
-                onClick={() => navigate('/usager/dashboard')}
-                className="px-6 py-3 rounded-full border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition"
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                disabled={loading || uploading}
-                className="px-8 py-3 rounded-full bg-orange text-white font-medium shadow-md hover:bg-orange-dark hover:shadow-lg disabled:opacity-50 disabled:shadow-none transition-all transform hover:-translate-y-0.5"
-              >
-                {loading ? 'Enregistrement...' : 'Enregistrer les modifications'}
-              </button>
+            {/* Footer / Navigation Buttons */}
+            <div className="px-6 md:px-10 py-6 bg-gray-50 border-t border-gray-100 flex justify-between items-center rounded-b-card">
+              <div>
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={handlePrevious}
+                    className="px-6 py-3 rounded-full border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition"
+                  >
+                    ← Précédent
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate('/usager/dashboard')}
+                  className="px-6 py-3 rounded-full border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition"
+                >
+                  Annuler
+                </button>
+                
+                {currentStep < 3 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="px-8 py-3 rounded-full bg-orange text-white font-medium shadow-md hover:bg-orange-dark hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                  >
+                    Suivant →
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCanSubmit(true);
+                      // Soumettre le formulaire après un court délai
+                      setTimeout(() => {
+                        const form = e.target.closest('form');
+                        if (form) form.requestSubmit();
+                      }, 0);
+                    }}
+                    disabled={loading || uploading}
+                    className="px-8 py-3 rounded-full bg-orange text-white font-medium shadow-md hover:bg-orange-dark hover:shadow-lg disabled:opacity-50 disabled:shadow-none transition-all transform hover:-translate-y-0.5"
+                  >
+                    {loading ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                  </button>
+                )}
+              </div>
             </div>
           </form>
         </div>

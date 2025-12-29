@@ -20,7 +20,7 @@ class SubmitProfileRequest extends FormRequest
             'years_experience' => ['required', 'integer', 'min:0', 'max:50'],
             'current_position' => ['required', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
-            'education_level' => ['required', 'in:bac,bac_2,bac_3,bac_5,doctorate,other'],
+            'education_level' => ['required', 'in:bac,licence,master,doctorat,ingenieur,autre'],
             'skills' => ['required', 'array', 'min:1'],
             'skills.*' => ['string', 'max:100'],
             'languages' => ['nullable', 'array'],

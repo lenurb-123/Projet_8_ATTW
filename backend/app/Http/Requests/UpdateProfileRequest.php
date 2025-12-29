@@ -20,9 +20,9 @@ class UpdateProfileRequest extends FormRequest
             'last_name' => ['sometimes', 'string', 'max:100'],
             'email' => ['sometimes', 'string', 'email', 'max:255', 'unique:users,email,' . $userId],
             'phone' => ['sometimes', 'string', 'max:20'],
-            'profession' => ['required', 'string', 'max:100'],
-            'secteur' => ['required', 'string', 'max:100'],
-            'newsletter_subscribed' => ['boolean'],
+            'profession' => ['sometimes', 'string', 'max:100'],
+            'secteur' => ['sometimes', 'string', 'max:100'],
+            'newsletter_subscribed' => ['sometimes', 'boolean'],
         ];
     }
 }

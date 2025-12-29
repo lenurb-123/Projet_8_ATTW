@@ -8,21 +8,24 @@ return new class extends Migration
     public function up(): void
     {
         // Mapper les anciennes valeurs vers les nouvelles
-        DB::table('professional_profiles')->whereNotNull('education_level')->each(function ($profile) {
-            $mapping = [
-                'bac' => 'bac',
-                'bac_2' => 'licence',
-                'bac_3' => 'licence',
-                'bac_5' => 'master',
-                'doctorate' => 'doctorat',
-            ];
-            
-            $newValue = $mapping[$profile->education_level] ?? 'bac';
-            
-            DB::table('professional_profiles')
-                ->where('id', $profile->id)
-                ->update(['education_level' => $newValue]);
-        });
+        DB::table('professional_profiles')
+            ->whereNotNull('education_level')
+            ->orderBy('id') // Requis pour chunk() dans Laravel 11+
+            ->each(function ($profile) {
+                $mapping = [
+                    'bac' => 'bac',
+                    'bac_2' => 'licence',
+                    'bac_3' => 'licence',
+                    'bac_5' => 'master',
+                    'doctorate' => 'doctorat',
+                ];
+                
+                $newValue = $mapping[$profile->education_level] ?? 'bac';
+                
+                DB::table('professional_profiles')
+                    ->where('id', $profile->id)
+                    ->update(['education_level' => $newValue]);
+            });
     }
 
     public function down(): void

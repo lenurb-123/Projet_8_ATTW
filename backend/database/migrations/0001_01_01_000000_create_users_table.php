@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('profession')->nullable();
             $table->string('secteur')->nullable();
+            $table->string('bio')->nullable();
             $table->boolean('newsletter_subscribed')->default(false);
             $table->rememberToken();
             $table->timestamps();

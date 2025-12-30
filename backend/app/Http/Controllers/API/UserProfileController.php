@@ -29,6 +29,7 @@ class UserProfileController extends Controller
             'professional_profile' => $user->professionalProfile,
             'academic_educations' => $user->academicEducations,
             'professional_experiences' => $user->professionalExperiences,
+            'bio' => $user->bio,
         ]);
     }
 
@@ -38,8 +39,7 @@ class UserProfileController extends Controller
     public function update(UpdateProfileRequest $request)
     {
         $user = $request->user();
-        
-        // Mettre à jour les champs autorisés (uniquement ceux de la table users)
+
         $user->update($request->validated());
 
         return response()->json([
@@ -146,7 +146,7 @@ class UserProfileController extends Controller
     public function deleteAccount(Request $request)
     {
         $user = $request->user();
-        
+
         // Soft delete l'utilisateur
         $user->delete();
 
@@ -248,7 +248,7 @@ class UserProfileController extends Controller
         $educations = AcademicEducation::where('user_id', $request->user()->id)
                                     ->orderBy('start_year', 'desc')
                                     ->get();
-        
+
         return response()->json(['educations' => $educations]);
     }
 
@@ -257,7 +257,7 @@ class UserProfileController extends Controller
         $experiences = ProfessionalExperience::where('user_id', $request->user()->id)
                                             ->orderBy('start_date', 'desc')
                                             ->get();
-        
+
         return response()->json(['experiences' => $experiences]);
     }
 }

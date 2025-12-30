@@ -77,8 +77,8 @@ const EditProfil = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1); // 1, 2, ou 3
-  const [canSubmit, setCanSubmit] = useState(false); // Empêcher la soumission automatique
+  const [currentStep, setCurrentStep] = useState(1);
+  const [canSubmit, setCanSubmit] = useState(false);
   const [files, setFiles] = useState({ photo: null, cv: null, legal: [] });
 
   const [formData, setFormData] = useState({
@@ -110,21 +110,14 @@ const EditProfil = () => {
 
   const handleExperienceChange = (index, e) => {
     const { name, value } = e.target;
-    // name is like "experiences[0][title]" but we can just use the field name from a simpler implementation or parse it if strictly keeping name attributes
-    // Simpler: pass the field key directly
+
     const field = name.split('.').pop() || name.split(']').slice(-2)[0].replace('[', '');
 
-    // Actually, let's keep it simple and just rely on the 'name' attribute structure "experiences[index][field]" might be hard to parse generically without logic.
-    // Instead we will update the inputs to pass the field name explicitly to a handler or parse the name.
 
-    // Better approach matching the previous structure:
     const updatedExperiences = [...formData.experiences];
-    // We need to know which property to update. 
-    // Let's assume the name on input is like "experiences[0][title]"
-    // But we can also just use a helper that takes (index, field, value)
+
   };
 
-  // Revised handlers
   const updateExperience = (index, field, value) => {
     const updatedExperiences = [...formData.experiences];
     updatedExperiences[index] = {
@@ -160,7 +153,7 @@ const EditProfil = () => {
     try {
       setLoading(true);
       const response = await profileService.getMyProfile();
-      const data = response.user || response; // Backend retourne {user: {...}, professional_profile: {...}}
+      const data = response.user || response;
       const professionalProfile = data.professional_profile || response.professional_profile || {};
 
       setFormData({
@@ -182,7 +175,6 @@ const EditProfil = () => {
         experiences: (data.experiences && Array.isArray(data.experiences)) ? data.experiences : []
       });
 
-      // Set existing files from professional_profile
       setFiles({
         photo: professionalProfile.profile_photo_url || data.photoUrl || data.photo || null,
         cv: professionalProfile.cv_url || data.cvUrl || data.cv || null,
@@ -199,18 +191,15 @@ const EditProfil = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     
-    // BLOQUER la soumission si elle n'a pas été explicitement autorisée
     if (!canSubmit) {
       return;
     }
     
-    // Ne pas soumettre si on upload encore
     if (uploading) {
       setError("Veuillez attendre la fin de l'upload avant de soumettre");
       return;
     }
     
-    // Ne permettre la soumission qu'à l'étape 3
     if (currentStep !== 3) {
       return;
     }
@@ -220,35 +209,33 @@ const EditProfil = () => {
       setError(null);
       setSuccess(null);
 
-      // Basic validation if needed, or rely on backend
       if (!formData.first_name || !formData.last_name) {
         setError("Veuillez remplir votre nom et prénom");
-        setCurrentStep(1); // Switch to step 1
+        setCurrentStep(1);
         return;
       }
 
       if (!formData.profession) {
         setError("Veuillez renseigner votre profession");
-        setCurrentStep(2); // Switch to step 2
+        setCurrentStep(2);
         return;
       }
 
       if (!formData.secteur && !formData.sector) {
         setError("Veuillez renseigner votre secteur d'activité");
-        setCurrentStep(2); // Switch to step 2
+        setCurrentStep(2);
         return;
       }
 
-      // Map frontend fields to backend expected fields (seulement les champs de la table users)
       const profileData = {
         first_name: formData.first_name,
         last_name: formData.last_name,
         phone: formData.phone,
         profession: formData.profession || formData.category || '',
         secteur: formData.secteur || formData.sector || '',
+        bio: formData.bio || 'N/A',
       };
 
-      // Sauvegarder le profil utilisateur (table users)
       await profileService.updateProfile(profileData);
       
       // Sauvegarder les données professionnelles (table professional_profiles)
@@ -293,15 +280,13 @@ const EditProfil = () => {
           const errorMessages = Object.entries(validationErrors)
             .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
             .join('\n');
-          setError(`Erreur de validation du profil professionnel:\n${errorMessages}`);
           setLoading(false);
-          return;
         }
       }
       
       setSuccess('Profil mis à jour avec succès. Vous pouvez maintenant le soumettre pour validation depuis votre tableau de bord.');
       // Rediriger après 3 secondes pour laisser le temps de lire le message
-      setTimeout(() => navigate('/usager/dashboard'), 3000);
+      setTimeout(() => navigate('/usager/dashboard'), 2000);
     } catch (err) {
       console.error('Erreur mise à jour profil:', err.response?.data);
       const backendErrors = err.response?.data?.errors;
@@ -311,7 +296,6 @@ const EditProfil = () => {
       } else {
         setError(err.response?.data?.message || 'Erreur lors de la mise à jour');
       }
-      // Scroll to top to show error
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -324,10 +308,8 @@ const EditProfil = () => {
     setError(null);
 
     try {
-      // Préparer les données additionnelles (category_id et sector_id)
       const additionalData = {};
       
-      // Récupérer category_id depuis formData.category (convertir le slug en ID backend)
       if (formData.category) {
         const categoryBackendId = getCategoryBackendId(formData.category);
         if (categoryBackendId) {
@@ -335,7 +317,6 @@ const EditProfil = () => {
         }
       }
       
-      // Pour sector_id, chercher l'ID correspondant au nom du secteur
       if (formData.secteur || formData.sector) {
         const sectorName = formData.secteur || formData.sector;
         const sectorId = getSectorIdByName(sectorName);
@@ -344,7 +325,6 @@ const EditProfil = () => {
         }
       }
 
-      // Loop through all selected files
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
         const response = await profileService.uploadFile(file, type, additionalData);
@@ -364,8 +344,7 @@ const EditProfil = () => {
           }
         });
       }
-      // Ne pas afficher de message de succès ni rediriger après l'upload
-      // L'utilisateur doit cliquer sur "Enregistrer" pour finaliser
+
     } catch (err) {
       console.error("Upload error details:", err);
       const errorMessage = err.response?.data?.message || err.message || "Erreur inconnue";
@@ -376,7 +355,6 @@ const EditProfil = () => {
   };
 
   const handleNext = () => {
-    // Validate current step before moving to next
     if (currentStep === 1) {
       if (!formData.first_name || !formData.last_name) {
         setError("Veuillez remplir au minimum votre nom et prénom avant de continuer");

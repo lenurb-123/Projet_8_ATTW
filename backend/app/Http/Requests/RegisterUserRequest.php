@@ -30,7 +30,7 @@ class RegisterUserRequest extends FormRequest
             'profession' => ['required', 'string', 'max:100'],
             'secteur' => ['required', 'string', 'max:100'],
             'newsletter_subscribed' => ['boolean'],
-            'role' => ['nullable', 'in:admin,user'], // Optionnel, admin ou user
+            'role' => ['nullable', 'in:admin,user'],
         ];
     }
 

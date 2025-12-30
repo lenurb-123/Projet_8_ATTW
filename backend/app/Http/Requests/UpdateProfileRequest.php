@@ -22,6 +22,7 @@ class UpdateProfileRequest extends FormRequest
             'phone' => ['sometimes', 'string', 'max:20'],
             'profession' => ['sometimes', 'string', 'max:100'],
             'secteur' => ['sometimes', 'string', 'max:100'],
+            'bio' => ['sometimes', 'string', 'max:2000'],
             'newsletter_subscribed' => ['sometimes', 'boolean'],
         ];
     }

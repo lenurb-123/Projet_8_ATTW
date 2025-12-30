@@ -37,6 +37,7 @@ class User extends Authenticatable
         'secteur',
         'city',
         'country',
+        'bio',
         'newsletter_subscribed',
     ];
 

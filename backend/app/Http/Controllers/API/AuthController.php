@@ -13,12 +13,10 @@ class AuthController extends Controller
 {
     public function register(RegisterUserRequest $request)
     {
-        // Déterminer le rôle et le statut
-        // Les utilisateurs sont actifs dès l'inscription pour pouvoir remplir leur profil
-        // Ils passeront en "pending" quand ils soumettront leur profil pour validation
+
         $role = $request->role ?? User::ROLE_USER;
-        $status = User::STATUS_ACTIVE; // Tous les utilisateurs commencent "active"
-        
+        $status = User::STATUS_ACTIVE;
+
         $user = User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -29,6 +27,7 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'profession' => $request->profession,
             'secteur' => $request->secteur,
+            'bio' => $request->bio,
             'newsletter_subscribed' => $request->newsletter_subscribed ?? false,
         ]);
 

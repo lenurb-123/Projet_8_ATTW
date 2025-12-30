@@ -153,7 +153,7 @@ const UsagerDashboard = () => {
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Biographie</h3>
             <p className="text-sm text-gray-900 line-clamp-2">
-              {profile?.professional_profile?.biography || 'Non renseignée'}
+              {profile?.bio || 'Non renseignée'}
             </p>
           </div>
 

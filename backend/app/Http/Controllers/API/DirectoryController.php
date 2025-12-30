@@ -16,10 +16,10 @@ class DirectoryController extends Controller
     {
         $query = User::where('status', 'active')
                      ->where('role', '!=', 'admin')
-                     ->whereHas('professionalProfile', function($q) {
-                         $q->whereNotNull('approved_at');
-                     })
-                     ->with(['professionalProfile.category', 'professionalProfile.sector']);
+//                      ->whereHas('professionalProfile', function($q) {
+//                          $q->whereNotNull('approved_at');
+//                      })
+//                      ->with(['professionalProfile.category', 'professionalProfile.sector']);
 
         // Recherche par mot-clé
         if ($request->has('search')) {

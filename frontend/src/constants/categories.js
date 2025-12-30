@@ -46,7 +46,7 @@ export const CATEGORIES = [
 // Mapping des IDs frontend vers IDs backend
 export const getCategoryBackendId = (frontendId) => {
   const category = CATEGORIES.find(cat => cat.id === frontendId);
-  return category?.backendId || null;
+  return category?.backendId || 1;
 };
 
 export const PROFILE_STATUS = {
